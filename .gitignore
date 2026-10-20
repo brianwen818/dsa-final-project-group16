@@ -14,4 +14,4 @@ data/cache/
 .env
 
 # Personal homework (contains student IDs)
-notes/homeworks/
+# notes/homeworks/
