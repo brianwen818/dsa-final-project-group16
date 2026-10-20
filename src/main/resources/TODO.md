@@ -5,7 +5,7 @@
 
 ## 要建立的檔案
 
-- [ ] `application.properties`：Spring Boot 設定
+- [x] `application.properties`：Spring Boot 設定（Stage 0 已建立，`server.port=8080`）
 - [ ] `static/index.html`：搜尋頁面
 - [ ] `static/` 的 CSS、JS
 

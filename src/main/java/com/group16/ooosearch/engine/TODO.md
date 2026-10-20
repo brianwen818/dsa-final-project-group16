@@ -6,5 +6,5 @@
 
 ## 要建立的檔案
 
-- [ ] `SearchEngine.java`：介面 `SearchResponse search(String query)`，附假資料實作（Stage 0，讓 Stage 5 能先開發前端）
+- [x] `SearchEngine.java`、`SearchResponse.java`：介面與結果類別，假實作為 `FakeSearchEngine`（Stage 0 完成，Stage 5 可以先用它開發前端）
 - [ ] `SearchEngine` 的正式實作：搜尋 → 建樹排名 → 關鍵字擴充 → 再搜尋

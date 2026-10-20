@@ -9,7 +9,8 @@
 
 - [ ] `Tokenizer.java`：用 HanLP 或 jieba-analysis 斷詞，**加自訂詞典**（塔托巴組合、鴻上集團…）；替代方案為 n-gram
 - [ ] `TfIdfAnalyzer.java`：自己實作詞頻、TF-IDF、共現次數（`HashMap` 計數、`PriorityQueue` 取 Top-K）
-- [ ] `KeywordExpander.java`：介面與實作，把高相關詞以較低權重加入關鍵字集合
+- [x] `KeywordExpander.java`：介面（Stage 0 完成，假實作為 `FakeKeywordExpander`）
+- [ ] `KeywordExpander` 的正式實作：把高相關詞以較低權重加入關鍵字集合
 - [ ] 過濾停用詞（`data/stopwords.txt`）
 - [ ] 設定相關度門檻、限制迭代次數，避免擴充偏題（例如「假面騎士W」）
 

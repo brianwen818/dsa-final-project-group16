@@ -8,9 +8,9 @@
 
 ## 要建立的檔案
 
-- [ ] `OooSearchApplication.java`：Spring Boot 進入點
+- [x] `OooSearchApplication.java`：Spring Boot 進入點（Stage 0 已建立最小版本）
 - [ ] `controller/SearchController.java`：處理搜尋請求
-- [ ] `service/SearchService.java`：呼叫 `SearchEngine`
+- [ ] `service/SearchService.java`：呼叫 `SearchEngine`（開發前端時先用 `FakeSearchEngine`）
 
 ## 其他工作
 

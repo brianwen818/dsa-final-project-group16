@@ -1,13 +1,13 @@
 # search/ — 自主搜尋網址（Refine the Rank of Google）
 
 - **Stage**：3
-- **負責人**：劉又綺、鄭年芮（`SearchProvider` 介面由廖若羽先定好）
+- **負責人**：劉又綺、鄭年芮
 - **期限**：11/01
-- **依賴**：`model/`、`fetch/`、`tree/`
+- **依賴**：`model/`、`fetch/`、`tree/`（Stage 2 完成前可用 `FakeSiteRanker`）
 
 ## 要建立的檔案
 
-- [ ] `SearchProvider.java`：介面 `List<String> search(String query, int limit)`（廖若羽）
+- [x] `SearchProvider.java`：介面 `List<String> search(String query, int limit)`（Stage 0 完成，假實作為 `FakeSearchProvider`）
 - [ ] `DuckDuckGoProvider.java`：解析 `html.duckduckgo.com/html/`；處理 `uddg=` 轉址連結
 - [ ] `MediaWikiProvider.java`：維基、Fandom 的搜尋 API
 - [ ] `CachedGoogleProvider.java`：讀取 `data/google_results.json`

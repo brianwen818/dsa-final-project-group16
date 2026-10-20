@@ -148,15 +148,18 @@
 | **負責人** | 温亮達 |
 | **期限** | 10/22 |
 | **目標** | 建好所有人共用的基礎，讓後續各 Stage 能同時開工 |
+| **狀態** | ✅ 已完成（2026-10-20），報告見 [stage0-report.md](notes/stage-reports/stage0-report.md) |
 
 **要做的事：**
 
-1. 建立 Maven 專案、`pom.xml`、`.gitignore`，以及第 6 節的 package 結構。
-2. 把 HW4、HW6 的 `Keyword`、`KeywordList`、`WebPage` 整理進 `model/`。
-3. **定好各層對外的介面**（見 [5.1](#51-介面先行)），並為每個介面寫一個回傳假資料的實作。
-4. 實作 `fetch/`：抓網頁（`PageFetcher`）與本機快取（`PageCache`）。
-5. 在 `data/` 放好關鍵字表、同義詞表的初版。
-6. 更新本 README 的執行方式。
+1. [x] 建立 Maven 專案、`pom.xml`、`.gitignore`，以及第 6 節的 package 結構。
+2. [x] 把 HW4、HW6 的 `Keyword`、`KeywordList`、`WebPage` 整理進 `model/`。
+3. [x] **定好各層對外的介面**（見 [5.1](#51-介面先行)），並為每個介面寫一個回傳假資料的實作。
+4. [x] 實作 `fetch/`：抓網頁（`PageFetcher`）與本機快取（`PageCache`）。
+5. [x] 在 `data/` 放好關鍵字表、同義詞表的初版。
+6. [x] 更新本 README 的執行方式。
+
+與原計畫不同的地方：`SiteResult` 改放 `tree/`、`SearchResponse` 改放 `engine/`；`WebNode`／`WebTree` 的資料結構與 `SearchProvider` 介面在 Stage 0 先建立；先建立最小的 `web/OooSearchApplication`。原因見 Stage 0 報告。
 
 ### 4.1 Stage 1（30%+）：單一網頁排名
 
@@ -244,7 +247,7 @@
 
 | | |
 |---|---|
-| **負責人** | 劉又綺、鄭年芮（`SearchProvider` 介面由廖若羽先定好） |
+| **負責人** | 劉又綺、鄭年芮（`SearchProvider` 介面已在 Stage 0 定好） |
 | **期限** | 11/01 |
 | **輸入** | 只有關鍵字，例如「假面騎士OOO」、「火野映司」、「安卡」 |
 | **輸出** | 用 Stage 2 演算法重新排名的網站清單，並與 Google 原始排名比較 |
@@ -435,6 +438,24 @@ public interface SearchEngine {
 
 **例子：** 廖若羽寫 Stage 2 時，可以先用一個「每頁都回傳 10 分」的假 `PageScorer`，不必等 Stage 1 完成。真正的實作寫好後換上去即可，Stage 2 的程式不用改。
 
+#### 目前的假實作
+
+這些假實作都**不連網路**，回傳固定格式的資料：
+
+| 介面 | 位置 | 假實作 | 假實作的行為 | 誰會換成真的 |
+|---|---|---|---|---|
+| `PageScorer` | `scoring/` | `FakePageScorer` | 每頁 10 分，每個關鍵字次數為 0 | Stage 1 |
+| `SiteRanker` | `tree/` | `FakeSiteRanker` | 每個根網址一棵單節點樹、10 分，依輸入順序排名 | Stage 2 |
+| `SearchProvider` | `search/` | `FakeSearchProvider` | 回傳 `https://example.com/ooo/1`…（最多 5 個） | Stage 3 |
+| `KeywordExpander` | `semantic/` | `FakeKeywordExpander` | 不擴充，原封不動回傳原關鍵字 | Stage 4 |
+| `SearchEngine` | `engine/` | `FakeSearchEngine` | 用上面的假實作組出完整結果，擴充詞固定為「塔托巴組合」「鴻上集團」 | 程式組整合 |
+
+#### 如何把假實作換成真的
+
+1. 在同一個 package 新增一個實作同一介面的類別，例如 `scoring/KeywordPageScorer implements PageScorer`。
+2. 把使用端的 `new FakePageScorer()` 改成 `new KeywordPageScorer()`。其他程式**不需要修改**，因為它們只認得介面。
+3. **保留 `FakeXxx`**，不要刪除。其他人的測試可能還在用它，也可以拿來離線 Demo。
+
 **修改共用介面前，請先在群組告知所有人。**
 
 ### 5.2 依賴方向
@@ -489,9 +510,11 @@ web → engine → semantic → search → tree → scoring → fetch → model
 
 ```
 dsa-final-project-group16/
-├── pom.xml                      # Maven 設定（Jsoup、HanLP、Selenium、Spring Boot、JUnit）
+├── pom.xml                      # Maven 設定（目前：Jsoup、Spring Boot、JUnit；HanLP、Selenium 由 Stage 3、4 加入）
+├── mvnw, mvnw.cmd, .mvn/        # Maven Wrapper，不用另外安裝 Maven
 ├── README.md                    # 本文件
 ├── .gitignore
+├── .gitattributes               # 固定 mvnw／mvnw.cmd 的換行格式
 │
 ├── docs/                        # 要繳交的文件
 │   ├── proposal/
@@ -513,14 +536,15 @@ dsa-final-project-group16/
 │
 └── src/
     ├── main/java/com/group16/ooosearch/
-    │   ├── model/       Keyword, KeywordList, WebPage, PageResult, SiteResult
+    │   ├── model/       Keyword, KeywordList, WebPage, PageResult
     │   ├── fetch/       PageFetcher, PageCache, TextExtractor
-    │   ├── scoring/     WordCounter, SynonymTable, PageScorer
-    │   ├── tree/        WebNode, WebTree, SiteCrawler, LinkFilter, SiteRanker
-    │   ├── search/      SearchProvider, DuckDuckGoProvider, MediaWikiProvider,
+    │   ├── scoring/     PageScorer, FakePageScorer, WordCounter, SynonymTable
+    │   ├── tree/        WebNode, WebTree, SiteResult, SiteRanker, FakeSiteRanker,
+    │   │                SiteCrawler, LinkFilter
+    │   ├── search/      SearchProvider, FakeSearchProvider, DuckDuckGoProvider, MediaWikiProvider,
     │   │                CachedGoogleProvider, SearchAggregator, GoogleResultCollector
-    │   ├── semantic/    Tokenizer, TfIdfAnalyzer, KeywordExpander
-    │   ├── engine/      SearchEngine（串起所有 Stage 的總入口）
+    │   ├── semantic/    KeywordExpander, FakeKeywordExpander, Tokenizer, TfIdfAnalyzer
+    │   ├── engine/      SearchEngine, SearchResponse, FakeSearchEngine（串起所有 Stage 的總入口）
     │   ├── web/         OooSearchApplication, controller/, service/
     │   ├── llm/         PromptBuilder
     │   └── cli/         Stage1Main, Stage2Main, Stage3Main, Stage4Main
@@ -536,7 +560,7 @@ dsa-final-project-group16/
 
 | package | 內容 |
 |---|---|
-| `model/` | 資料類別，沒有任何邏輯依賴。由 HW4、HW6 的類別整理而來 |
+| `model/` | 資料類別，不依賴其他 package。由 HW4、HW6 的類別整理而來。用到 `WebTree` 的 `SiteResult`、`SearchResponse` 分別放在 `tree/`、`engine/`，以維持依賴方向 |
 | `fetch/` | 抓網頁、快取、抽取正文（用 Stack 跳過非正文區塊） |
 | `scoring/` | 關鍵字計數、同義詞合併、單頁計分 |
 | `tree/` | BFS 爬取子頁面、連結過濾、建樹、後序走訪計分、網站排名 |
@@ -566,28 +590,38 @@ notes/homeworks/
 
 ## 7. 開發環境與執行方式
 
-> 骨架完成後（Stage 0）會補上實際指令，以下為預定方式。
-
 ### 需要安裝
 
-- JDK 17 以上
-- Maven（或使用專案內附的 `mvnw`）
+- **JDK 21 以上**（專案以 Java 21 編譯）
+- **不需要安裝 Maven**：專案內附 Maven Wrapper（`mvnw`、`mvnw.cmd`），第一次執行時會自動下載 Maven 與所有套件，需要網路
 - Google Chrome（只有執行 `GoogleResultCollector` 時才需要）
 
-### 預定指令
+### 常用指令
 
-```bash
-# 編譯並執行測試
-./mvnw test
+所有指令都要在**專案根目錄**執行（程式會從 `data/` 讀取檔案）。
 
-# 執行各 Stage 的命令列 Demo
-./mvnw exec:java -Dexec.mainClass=com.group16.ooosearch.cli.Stage1Main
+| 用途 | PowerShell／cmd | Git Bash／macOS／Linux |
+|---|---|---|
+| 編譯並執行所有測試 | `.\mvnw.cmd test` | `./mvnw test` |
+| 執行 Stage 1 Demo | `.\mvnw.cmd compile exec:java "-Dexec.mainClass=com.group16.ooosearch.cli.Stage1Main"` | `./mvnw compile exec:java -Dexec.mainClass=com.group16.ooosearch.cli.Stage1Main` |
+| 啟動網站，開啟 http://localhost:8080 | `.\mvnw.cmd spring-boot:run` | `./mvnw spring-boot:run` |
+| 打包成 jar（輸出到 `target/`） | `.\mvnw.cmd package` | `./mvnw package` |
 
-# 啟動網站（Stage 5），開啟 http://localhost:8080
-./mvnw spring-boot:run
+- 執行其他 Stage 的 Demo 時，把 `Stage1Main` 換成 `Stage2Main` 等即可。
+- `exec:java` 不會自動編譯，所以前面要加 `compile`。
+- 網站目前還沒有頁面，開啟後顯示 404 是正常的（Stage 5 才會加上）。按 `Ctrl+C` 停止。
+- **中文變成亂碼**：在 cmd 先執行 `chcp 65001` 切換成 UTF-8。
+
+### 預期輸出
+
+執行 Stage 1 Demo（Stage 0 版本，使用假資料）應該看到：
+
 ```
-
-Windows 請把 `./mvnw` 改成 `mvnw.cmd`。
+關鍵字：[[假面騎士OOO,5.0], [火野映司,3.0], [安卡,3.0], [核心硬幣,2.0], [貪婪,2.0], [變身,1.0]]
+名次	網址	分數	假面騎士OOO	火野映司	安卡	核心硬幣	貪婪	變身
+1	https://example.com/ooo/1	10.00	0	0	0	0	0	0
+2	https://example.com/ooo/2	10.00	0	0	0	0	0	0
+```
 
 ---
 
@@ -613,7 +647,7 @@ Windows 請把 `./mvnw` 改成 `mvnw.cmd`。
 ### 8.4 時程與分工
 
 - Stage 2 只有 5 天（10/22 → 10/27），可以直接從 HW6 的程式改起。
-- Stage 3 要等 Stage 2，而工作組 11/1 前還要寫 Proposal。所以**由廖若羽先定好 `SearchProvider` 介面**，工作組再接手實作。
+- Stage 3 要等 Stage 2，而工作組 11/1 前還要寫 Proposal。`SearchProvider` 介面與 `FakeSiteRanker` 已在 Stage 0 完成，工作組可以先用假資料開發，不必等 Stage 2。
 - Stage 3、5、6 和 PPT 集中在同兩位組員身上。**程式組在 Stage 4 完成後（11/12）支援 Stage 5**，PPT 與上台報告也要盡早指定負責人。
 
 ### 8.5 使用 AI 工具
@@ -637,7 +671,7 @@ Windows 請把 `./mvnw` 改成 `mvnw.cmd`。
 | 所有人 | [cli](src/main/java/com/group16/ooosearch/cli/TODO.md)、[data](data/TODO.md)、[test](src/test/java/com/group16/ooosearch/TODO.md) |
 | 尚未分配 | [presentation](docs/presentation/TODO.md) |
 
-Stage 0 另外還要建立根目錄的 `pom.xml` 與 Maven Wrapper（`mvnw`、`mvnw.cmd`）。
+根目錄的 `pom.xml` 與 Maven Wrapper（`mvnw`、`mvnw.cmd`）已在 Stage 0 建立。
 
 ### 整體里程碑
 
@@ -645,7 +679,7 @@ Stage 0 另外還要建立根目錄的 `pom.xml` 與 Maven Wrapper（`mvnw`、`m
 
 - [x] 專案資料夾結構與各資料夾的 TODO
 - [x] `.gitignore`
-- [ ] Stage 0：`pom.xml`、介面、假資料實作
+- [x] Stage 0：`pom.xml`、介面、假資料實作（2026-10-20）
 - [ ] Stage 1：單一網頁排名
 - [ ] Proposal 主題介紹（10/22）
 - [ ] Stage 2：網站排名（樹狀結構）

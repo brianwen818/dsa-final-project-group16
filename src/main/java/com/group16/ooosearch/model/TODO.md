@@ -7,13 +7,13 @@
 
 ## 要建立的檔案
 
-- [ ] `Keyword.java`：關鍵字名稱與權重（HW4、HW6）
-- [ ] `KeywordList.java`：關鍵字集合（HW4）
-- [ ] `WebPage.java`：網址、名稱、正文內容（HW6）
-- [ ] `PageResult.java`：單頁的分數與各關鍵字次數（Stage 1 輸出）
-- [ ] `SiteResult.java`：網站總分與 `WebTree`（Stage 2 輸出）
-- [ ] `SearchResponse.java`：排名、樹、擴充出的關鍵字（`SearchEngine` 輸出，Stage 5 使用）
+- [x] `Keyword.java`：關鍵字名稱與權重（HW4、HW6）
+- [x] `KeywordList.java`：關鍵字集合（HW4）；`fromFile` 讀取 `data/keywords.txt`
+- [x] `WebPage.java`：網址、標題、原始 HTML（HW6）
+- [x] `PageResult.java`：單頁的分數與各關鍵字次數（Stage 1 輸出）
+- [x] ~~`SiteResult.java`~~：改放在 `tree/`（因為用到 `WebTree`，放這裡會違反依賴方向）
+- [x] ~~`SearchResponse.java`~~：改放在 `engine/`（理由同上）
 
 ## Stage 完成後
 
-- [ ] 在 `notes/stage-reports/` 撰寫 `stage0-report.md`（複製 `TEMPLATE.md`）
+- [x] 在 `notes/stage-reports/` 撰寫 `stage0-report.md`（複製 `TEMPLATE.md`）

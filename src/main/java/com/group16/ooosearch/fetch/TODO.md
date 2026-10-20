@@ -7,9 +7,9 @@
 
 ## 要建立的檔案
 
-- [ ] `PageFetcher.java`：用 Jsoup 抓網頁；設定 User-Agent 與請求間隔
-- [ ] `PageCache.java`：網頁存到 `data/cache/`，用 `HashMap` 當索引；有快取就不重新抓
-- [ ] `TextExtractor.java`：用 Stack（HW5）跳過 `<script>`、`<style>`、`<nav>`，只保留正文
+- [x] `PageFetcher.java`：用 Jsoup 抓網頁；設定 User-Agent 與請求間隔
+- [x] `PageCache.java`：網頁存到 `data/cache/`，用 `HashMap` 當索引；有快取就不重新抓
+- [ ] `TextExtractor.java`（Stage 1）：用 Stack（HW5）跳過 `<script>`、`<style>`、`<nav>`，只保留正文
 
 ## 注意
 
