@@ -1,0 +1,17 @@
+# Build output
+target/
+*.class
+
+# Crawled page cache (rebuilt locally)
+data/cache/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Secrets
+.env
+
+# Personal homework (contains student IDs)
+notes/homeworks/
