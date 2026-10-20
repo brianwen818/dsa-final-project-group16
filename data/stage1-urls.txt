@@ -1,0 +1,20 @@
+# Stage 1 測試網址
+# 格式：每行「網址 說明」，說明可省略；空行與 # 開頭的行會被略過
+# 混合不同類型的網頁，檢驗計分能否分辨「以 OOO 為主題」的網頁。
+# 兩篇維基是產生關鍵字的來源，只當作參考，不能用來證明計分有效（循環論證）。
+
+# 參考：關鍵字的來源
+https://ja.wikipedia.org/wiki/%E4%BB%AE%E9%9D%A2%E3%83%A9%E3%82%A4%E3%83%80%E3%83%BC%E3%82%AA%E3%83%BC%E3%82%BA/OOO 日版維基（參考）
+https://zh.wikipedia.org/zh-tw/%E5%81%87%E9%9D%A2%E9%A8%8E%E5%A3%ABOOO 台版維基（參考）
+
+# 以 OOO 為主題的其他來源
+https://zh.moegirl.org.cn/%E5%81%87%E9%9D%A2%E9%AA%91%E5%A3%ABOOO 萌娘百科（簡體）
+https://acg.gamer.com.tw/acgDetail.php?s=39385 巴哈姆特動畫瘋資料庫
+https://home.gamer.com.tw/artwork.php?sn=4705085 巴哈姆特心得文（由慾望邁向明日）
+https://home.gamer.com.tw/creationDetail.php?sn=2148381 巴哈姆特心得文（假面騎士OOO心得）
+https://www.ptt.cc/bbs/Tokusatsu/M.1647572707.A.A3E.html PTT特攝板心得文
+https://kamenrider.fandom.com/wiki/Kamen_Rider_OOO Kamen Rider Wiki（英文）
+
+# 對照組：不以 OOO 為主題
+https://zh.wikipedia.org/zh-tw/%E5%81%87%E9%9D%A2%E9%A8%8E%E5%A3%ABW 台版維基：假面騎士W（有客串，但不是主題）
+https://zh.wikipedia.org/zh-tw/%E5%AE%89%E5%8D%A1%E6%8B%89 台版維基：安卡拉（測試排除詞）

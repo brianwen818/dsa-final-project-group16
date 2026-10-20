@@ -27,7 +27,7 @@
 
 | 檔案 | 說明 |
 |---|---|
-| `pom.xml`、`mvnw`、`mvnw.cmd`、`.mvn/`、`.gitattributes` | Maven 設定與 Wrapper，沿用 HW4 Bonus BMI 專案的設定（Spring Boot 4.1.1、Java 21、Maven 3.10.0） |
+| `pom.xml`、`mvnw`、`mvnw.cmd`、`.mvn/`、`.gitattributes` | Maven 設定與 Wrapper，沿用 HW4 Bonus BMI 專案的設定（Spring Boot 4.1.1、Java 21（2026-10-20 改為 25）、Maven 3.10.0） |
 | `model/Keyword`、`KeywordList` | 由 HW4、HW6 整理而來；`KeywordList.fromFile` 讀取 `data/keywords.txt` |
 | `model/WebPage` | 網址、標題、原始 HTML。與 HW6 不同，不會自己抓網頁 |
 | `model/PageResult` | 單頁分數與各關鍵字次數 |
@@ -73,6 +73,7 @@
 | 2026-10-20 | `web/OooSearchApplication` 由 Stage 5 建立 | Stage 0 建立最小版本（沒有 controller） | 專案有多個 `main`，沒有指定 Spring Boot 進入點的話，`mvnw package` 會失敗 | Stage 5：controller、service 仍由 Stage 5 新增 |
 | 2026-10-20 | `pom.xml` 包含 HanLP、Selenium | 只放現在用得到的 Jsoup、Spring Boot、JUnit | 避免下載用不到的套件；版本由實際使用的人決定 | Stage 3、4：需要時自行加入 `pom.xml` |
 | 2026-10-20 | README 寫 JDK 17 以上 | JDK 21 以上 | 沿用 BMI 專案的設定（`java.version` 21），組員做 HW4 Bonus 時已用過這個環境 | 所有人：JDK 需為 21 以上 |
+| 2026-10-20 | JDK 21 以上 | JDK 25 以上 | `pom.xml` 的 `java.version` 改為 25 | 所有人：JDK 需為 25 以上，README 第 7 節已更新 |
 
 ## 4. 執行結果
 

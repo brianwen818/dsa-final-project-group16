@@ -156,7 +156,7 @@
 2. [x] 把 HW4、HW6 的 `Keyword`、`KeywordList`、`WebPage` 整理進 `model/`。
 3. [x] **定好各層對外的介面**（見 [5.1](#51-介面先行)），並為每個介面寫一個回傳假資料的實作。
 4. [x] 實作 `fetch/`：抓網頁（`PageFetcher`）與本機快取（`PageCache`）。
-5. [x] 在 `data/` 放好關鍵字表、同義詞表的初版。
+5. [x] 在 `data/` 放好關鍵字表、同義詞表的初版（Stage 1 已改為 `concepts.txt`＋自動產生的 `keywords.txt`）。
 6. [x] 更新本 README 的執行方式。
 
 與原計畫不同的地方：`SiteResult` 改放 `tree/`、`SearchResponse` 改放 `engine/`；`WebNode`／`WebTree` 的資料結構與 `SearchProvider` 介面在 Stage 0 先建立；先建立最小的 `web/OooSearchApplication`。原因見 Stage 0 報告。
@@ -169,42 +169,56 @@
 | **期限** | 10/22 |
 | **輸入** | 一組關鍵字（含權重）與一組網址 |
 | **輸出** | 每個網址的名次、分數、各關鍵字出現次數 |
-| **主要 package** | `scoring/`、`cli/Stage1Main` |
+| **主要 package** | `fetch/`、`scoring/`、`cli/Stage1Main`、`cli/KeywordSeedAnalyzer` |
+| **狀態** | ✅ 已完成（2026-10-20），報告見 [stage1-report.md](notes/stage-reports/stage1-report.md) |
 
 **做法：**
 
-1. 抓取每個網址的內容，**用 Stack（HW5）跳過 `<script>`、`<style>`、`<nav>` 等區塊**，只保留正文。
-2. 計算每個關鍵字的出現次數。
-3. 依計分公式算出分數，再排序。
+1. 用 `PageFetcher` 抓取每個網址（自動使用快取）。
+2. `TextExtractor` **用 Stack（HW5）跳過 `<script>`、`<style>`、`<nav>`、`<footer>` 等區塊**，只保留正文。
+3. `WordCounter` 計算每個關鍵字（含所有同義詞）的出現次數：
+   - `SynonymTable` 用 `HashMap` 把每種寫法對應到關鍵字（多對一）
+   - **長的寫法先比對**，比對到的位置用 `boolean[]` 標記，避免「假面騎士OOO」裡的「OOO」被重複計算
+   - 忽略大小寫、全形半形；英文寫法要求前後是字界（避免 Birth 比對到 Birthday）
+4. `KeywordPageScorer` 計算 `分數 = Σ(權重 × 次數)`，再依分數排序。
 
-**關鍵字（初版，附權重）：**
+**關鍵字與權重：用維基百科統計，不憑感覺決定**
 
-| 關鍵字 | 權重 |
-|---|---|
-| 假面騎士OOO | 5 |
-| 火野映司 | 3 |
-| 安卡 | 3 |
-| 核心硬幣 | 2 |
-| 貪婪 | 2 |
-| 變身 | 1 |
+| 檔案 | 誰維護 | 內容 |
+|---|---|---|
+| `data/concepts.txt` | **人工** | 要收哪些關鍵字、每個關鍵字有哪些寫法（台版用語為主，日文、英文、簡體為其他寫法）、依據 |
+| `data/keywords.txt` | **程式產生** | `權重 \| 關鍵字 \| 其他寫法`，由 `KeywordSeedAnalyzer` 計算，請勿手改 |
 
-**計分公式（基本版）：** `分數 = Σ(權重 × 次數)`
+權重計算（明細見 `data/keyword-candidates/concept-weights.md`）：
 
-**測試網址範例：** 中文維基百科 OOO 條目、Kamen Rider Wiki（Fandom）OOO 頁面、萌娘百科 OOO 頁面、巴哈姆特討論文。
+1. 資料來源：日版維基「仮面ライダーオーズ/OOO」、台版維基「假面騎士OOO」＋「假面騎士OOO角色列表」；背景為其他 6 部作品的條目
+2. 每個語言：`專屬程度 = OOO 頻率 / (OOO 頻率 + 背景平均頻率)`、`分數 = (1 + ln 次數) × 專屬程度 × 導言加權`
+3. 兩語言分數各除以該語言最高分後取平均得 `s`，**`權重 = 1 + 4s`**
 
-**輸出範例：**
+其他規則：
+- アンク的顯示名稱用台版維基的「**安酷**」，「安卡」列為其他寫法
+- **排除詞**（權重 0）：例如「安卡拉」，佔住比對位置但不加分
+- 不收容易誤判的寫法：單獨的「Birth」、「變身」
 
-| 名次 | 網址 | 分數 | 假面騎士OOO | 火野映司 | 安卡 | 核心硬幣 | … |
-|---|---|---|---|---|---|---|---|
-| 1 | 萌娘百科 | 212 | 18 | 25 | 20 | 12 | … |
-| 2 | 維基百科 | 175 | 15 | 20 | 14 | 8 | … |
-| 3 | 巴哈文章 | 40 | 3 | 5 | 2 | 1 | … |
+**測試網址：** `data/stage1-urls.txt`，混合維基（參考）、萌娘百科、巴哈姆特、PTT、Fandom，以及兩個對照組（台版維基「假面騎士W」「安卡拉」）。
 
-**延伸：**
+**實際結果（2026-10-20）：**
 
-- **同義詞合併**：`SynonymTable` 用 `HashMap` 把「OOO／歐茲／オーズ」、「安卡／Ankh／アンク」對應到同一個標準名稱，合併計數。
+| 名次 | 網頁 | 分數 |
+|---|---|---|
+| 1～3 | 日版維基、台版維基（參考）、Kamen Rider Wiki | 7384.9、2135.3、1654.3 |
+| 4 | 萌娘百科（簡體） | 545.8 |
+| 5 | 巴哈姆特心得文 | 464.5 |
+| 6 | PTT 特攝板心得文 | 141.9 |
+| 7 | 巴哈姆特動畫瘋資料庫 | 103.2 |
+| 8 | 對照組：假面騎士W | 94.2 |
+| 9 | 對照組：安卡拉 | 17.6 |
+| 10 | 巴哈姆特心得文（內容很短） | 13.8 |
+
+**延伸（尚未完成）：**
+
 - **多關鍵字比對**：從 HW3 的 Boyer-Moore 延伸到 **Aho-Corasick**（Trie 加 failure link），掃一次就能數完所有關鍵字與同義詞，並比較兩者效能。
-- **改良公式**：標題中出現的次數加倍；依頁面長度正規化，避免長頁面占便宜。
+- **改良公式**：依頁面長度正規化（目前長頁面明顯占便宜）、標題加權。
 - **比較**：HW6 是直接數原始 HTML（網址、標籤都會被算到），本專案改成只數正文。前後差異可以寫進報告。
 
 ### 4.2 Stage 2（50%+）：網站排名（多層搜尋）
@@ -481,6 +495,7 @@ web → engine → semantic → search → tree → scoring → fetch → model
 ### 5.4 共用資料
 
 - 關鍵字、同義詞、種子網址、停用詞都放在 `data/` 的文字檔，**不要寫死在程式裡**。
+- 要增減關鍵字或寫法，請改 `data/concepts.txt` 後執行 `KeywordSeedAnalyzer`，不要直接改 `data/keywords.txt`。
 - 爬下來的網頁存在 `data/cache/`（不上傳 Git）。每個人都可以重建自己的快取，開發時也不用一直重新爬取。
 
 ### 5.5 Stage 報告
@@ -525,8 +540,11 @@ dsa-final-project-group16/
 │   └── stage-reports/           # 各 Stage 完成後的報告（見 5.5）
 │
 ├── data/                        # 非程式的資料，大家共用
-│   ├── keywords.txt             # 關鍵字與權重
-│   ├── synonyms.txt             # 同義詞，例如：安卡,Ankh,アンク
+│   ├── concepts.txt             # 概念表（人工）：關鍵字與其他寫法
+│   ├── keywords.txt             # 關鍵字表（程式產生）：權重 | 關鍵字 | 其他寫法
+│   ├── keyword-candidates/      # 候選關鍵字清單與權重計算明細（KeywordSeedAnalyzer 產生）
+│   ├── stage1-urls.txt          # Stage 1 測試網址
+│   ├── results/                 # 各 Stage 的執行結果（CSV）
 │   ├── seed-urls.txt            # Stage 2 的根網址、Stage 3 的備案
 │   ├── stopwords.txt            # Stage 4 停用詞
 │   ├── google_results.json      # Selenium 抓到的 Google 對照組
@@ -537,8 +555,8 @@ dsa-final-project-group16/
 └── src/
     ├── main/java/com/group16/ooosearch/
     │   ├── model/       Keyword, KeywordList, WebPage, PageResult
-    │   ├── fetch/       PageFetcher, PageCache, TextExtractor
-    │   ├── scoring/     PageScorer, FakePageScorer, WordCounter, SynonymTable
+    │   ├── fetch/       PageFetcher, PageCache, TextExtractor, MediaWikiClient
+    │   ├── scoring/     PageScorer, FakePageScorer, KeywordPageScorer, WordCounter, SynonymTable, TextNormalizer
     │   ├── tree/        WebNode, WebTree, SiteResult, SiteRanker, FakeSiteRanker,
     │   │                SiteCrawler, LinkFilter
     │   ├── search/      SearchProvider, FakeSearchProvider, DuckDuckGoProvider, MediaWikiProvider,
@@ -547,7 +565,8 @@ dsa-final-project-group16/
     │   ├── engine/      SearchEngine, SearchResponse, FakeSearchEngine（串起所有 Stage 的總入口）
     │   ├── web/         OooSearchApplication, controller/, service/
     │   ├── llm/         PromptBuilder
-    │   └── cli/         Stage1Main, Stage2Main, Stage3Main, Stage4Main
+    │   └── cli/         Stage1Main, Stage2Main, Stage3Main, Stage4Main,
+    │                    KeywordSeedAnalyzer, ConceptWeightCalculator（離線工具）
     │
     ├── main/resources/
     │   ├── application.properties
@@ -562,7 +581,7 @@ dsa-final-project-group16/
 |---|---|
 | `model/` | 資料類別，不依賴其他 package。由 HW4、HW6 的類別整理而來。用到 `WebTree` 的 `SiteResult`、`SearchResponse` 分別放在 `tree/`、`engine/`，以維持依賴方向 |
 | `fetch/` | 抓網頁、快取、抽取正文（用 Stack 跳過非正文區塊） |
-| `scoring/` | 關鍵字計數、同義詞合併、單頁計分 |
+| `scoring/` | 文字正規化、同義詞表、關鍵字計數（長的寫法優先）、單頁計分 |
 | `tree/` | BFS 爬取子頁面、連結過濾、建樹、後序走訪計分、網站排名 |
 | `search/` | 各種搜尋來源與合併；`GoogleResultCollector` 是離線執行的 Selenium 程式 |
 | `semantic/` | 斷詞、TF-IDF、共現分析、關鍵字擴充 |
@@ -592,7 +611,7 @@ notes/homeworks/
 
 ### 需要安裝
 
-- **JDK 21 以上**（專案以 Java 21 編譯）
+- **JDK 25 以上**（專案以 Java 25 編譯）
 - **不需要安裝 Maven**：專案內附 Maven Wrapper（`mvnw`、`mvnw.cmd`），第一次執行時會自動下載 Maven 與所有套件，需要網路
 - Google Chrome（只有執行 `GoogleResultCollector` 時才需要）
 
@@ -604,6 +623,7 @@ notes/homeworks/
 |---|---|---|
 | 編譯並執行所有測試 | `.\mvnw.cmd test` | `./mvnw test` |
 | 執行 Stage 1 Demo | `.\mvnw.cmd compile exec:java "-Dexec.mainClass=com.group16.ooosearch.cli.Stage1Main"` | `./mvnw compile exec:java -Dexec.mainClass=com.group16.ooosearch.cli.Stage1Main` |
+| 重新產生關鍵字表（修改 `concepts.txt` 後） | `.\mvnw.cmd compile exec:java "-Dexec.mainClass=com.group16.ooosearch.cli.KeywordSeedAnalyzer"` | `./mvnw compile exec:java -Dexec.mainClass=com.group16.ooosearch.cli.KeywordSeedAnalyzer` |
 | 啟動網站，開啟 http://localhost:8080 | `.\mvnw.cmd spring-boot:run` | `./mvnw spring-boot:run` |
 | 打包成 jar（輸出到 `target/`） | `.\mvnw.cmd package` | `./mvnw package` |
 
@@ -614,14 +634,22 @@ notes/homeworks/
 
 ### 預期輸出
 
-執行 Stage 1 Demo（Stage 0 版本，使用假資料）應該看到：
+執行 Stage 1 Demo 會抓取 `data/stage1-urls.txt` 的網址（第一次需要網路，之後使用 `data/cache/` 的快取），印出排名與各網頁的關鍵字次數，並把結果存到 `data/results/stage1-results.csv`：
 
 ```
-關鍵字：[[假面騎士OOO,5.0], [火野映司,3.0], [安卡,3.0], [核心硬幣,2.0], [貪婪,2.0], [變身,1.0]]
-名次	網址	分數	假面騎士OOO	火野映司	安卡	核心硬幣	貪婪	變身
-1	https://example.com/ooo/1	10.00	0	0	0	0	0	0
-2	https://example.com/ooo/2	10.00	0	0	0	0	0	0
+===== 排名 =====
+名次	分數	說明	網址
+1	7384.9	日版維基（參考）	https://ja.wikipedia.org/wiki/...
+...
+4	545.8	萌娘百科（簡體）	https://zh.moegirl.org.cn/...
+...
+
+===== 各網頁關鍵字次數（只列出現過的） =====
+...
+6. PTT特攝板心得文：假面騎士OOO 8、安酷 5、貪婪 1、火野映司 18
 ```
+
+可以用參數指定其他檔案：`Stage1Main [網址檔] [關鍵字檔]`，例如 `"-Dexec.args=data/my-urls.txt"`。
 
 ---
 
@@ -680,7 +708,7 @@ notes/homeworks/
 - [x] 專案資料夾結構與各資料夾的 TODO
 - [x] `.gitignore`
 - [x] Stage 0：`pom.xml`、介面、假資料實作（2026-10-20）
-- [ ] Stage 1：單一網頁排名
+- [x] Stage 1：單一網頁排名（2026-10-20）
 - [ ] Proposal 主題介紹（10/22）
 - [ ] Stage 2：網站排名（樹狀結構）
 - [ ] Stage 3：自主搜尋網址並重新排名

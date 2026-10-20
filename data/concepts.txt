@@ -1,0 +1,42 @@
+# 概念表（人工維護）：要收哪些關鍵字、每個關鍵字有哪些寫法
+# 權重不在這裡填，由 cli/KeywordSeedAnalyzer 依日版、台版維基計算後寫入 data/keywords.txt
+#
+# 格式：關鍵字 | 其他寫法1, 其他寫法2, ... | 依據
+#   - 關鍵字使用台版用語；其他寫法包含日文、英文（Fandom）與常見簡體寫法（萌娘百科等）
+#   - 同一種寫法只能屬於一個關鍵字
+#   - 以 ! 開頭的是排除詞：權重 0，只用來佔住比對位置，避免誤判（例如「安卡拉」不算「安卡」）
+#   - 依據中的名次指 data/keyword-candidates/ 的日版（ja）、台版（zh）候選清單
+#   - 刻意不收的寫法：單獨的「Birth」（一般英文）、「變身」（每部作品都有，專屬程度低）
+
+# 作品
+假面騎士OOO | 仮面ライダーオーズ, オーズ, OOO, Kamen Rider OOO, 幪面超人OOO, 假面骑士OOO | ja 1（オーズ）、7（仮面ライダーオーズ）；zh 2；條目名稱
+
+# 核心設定
+核心硬幣 | コアメダル, Core Medal, Core Medals, 核心硬币 | ja 8；zh 1
+一般硬幣 | セルメダル, Cell Medal, Cell Medals, 普通代幣 | ja 9；zh 39、19（Cell Medals）
+貪婪 | グリード, Greeed, 貪婪怪人, 贪婪 | ja 3；zh 21（貪婪怪人）；台版內文多用 Greeed
+Yummy | ヤミー | ja 5；台版內文用 Yummy（28 次）
+慾望 | 欲望 | zh 8；作品主題
+OOO驅動器 | オーズドライバー, OOO Driver, OOO驱动器 | ja 26；zh 20
+TaToBa COMBO | タトバコンボ, 鷹虎蝗, 塔托巴組合, 塔托巴组合 | ja 24；zh 47
+
+# 角色
+安酷 | 安卡, アンク, Ankh | ja 4；zh 19；台版維基譯作安酷，安卡為常見譯名
+火野映司 | 映司, Eiji Hino, Hino Eiji | ja 21；zh 7
+伊達明 | 伊达明, Akira Date | ja 29；zh 9
+後藤慎太郎 | 后藤慎太郎, Shintaro Gotou, Shintaro Goto | ja 60；zh 23
+鴻上光生 | 鸿上光生, Kousei Kougami | ja 49；zh 22
+真木清人 | Kiyoto Maki | ja 34；zh 26
+泉比奈 | Hina Izumi | ja 48；zh 32
+烏霸 | ウヴァ, Uva, 乌霸 | ja 14；台版內文用 Uva
+卡佳里 | カザリ, Kazari | ja 15；台版內文用 Kazari
+佳美爾 | ガメル, Gamel | ja 16；台版內文用 Gamel
+梅茲魯 | メズール, Mezool | ja 17；台版內文用 Mezool
+假面騎士Birth | 仮面ライダーバース, Kamen Rider Birth, 假面骑士Birth | ja 11；zh 12
+
+# 組織、地點
+鴻上基金會 | 鴻上ファウンデーション, Kougami Foundation, 鸿上基金会 | ja 18；zh 11
+多國料理店 | クスクシエ, Cous Coussier, Couscoussier | ja 19；zh 24
+
+# 排除詞
+!安卡拉 | | 土耳其首都，避免「安卡」誤判

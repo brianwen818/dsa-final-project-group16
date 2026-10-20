@@ -1,5 +1,0 @@
-# 同義詞表（Stage 1 由 SynonymTable 讀取）
-# 格式：每行「標準名稱,同義詞1,同義詞2,...」，以半形逗號分隔
-# 標準名稱要與 keywords.txt 中的名稱相同；空行與 # 開頭的行會被略過
-假面騎士OOO,OOO,歐茲,オーズ,Kamen Rider OOO,幪面超人OOO
-安卡,Ankh,アンク

@@ -13,8 +13,9 @@ import com.group16.ooosearch.model.WebPage;
  * 兩次連線之間至少間隔 minIntervalMillis，避免被網站封鎖。
  */
 public class PageFetcher {
+    /** 依 Wikimedia 的 User-Agent 規範，附上專案網址作為聯絡方式。 */
     private static final String USER_AGENT =
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Group16-OOO-Search/0.1 (course project)";
+            "Group16-OOO-Search/0.1 (https://github.com/brianwen818/Data-Structure-Final-Project---Group-16; course project)";
 
     private final PageCache cache;
     private final long minIntervalMillis;
@@ -32,21 +33,28 @@ public class PageFetcher {
     }
 
     public WebPage fetch(String url) throws IOException {
-        Optional<String> cached = cache.get(url);
-        String html = cached.isPresent() ? cached.get() : download(url);
+        String html = fetchText(url);
         Document doc = Jsoup.parse(html, url);
         return new WebPage(url, doc.title(), html);
     }
 
+    /** 取得網址回傳的原始內容（HTML、JSON 等），一樣會使用快取。 */
+    public String fetchText(String url) throws IOException {
+        Optional<String> cached = cache.get(url);
+        return cached.isPresent() ? cached.get() : download(url);
+    }
+
     private String download(String url) throws IOException {
         waitForInterval();
-        String html = Jsoup.connect(url)
+        String body = Jsoup.connect(url)
                 .userAgent(USER_AGENT)
                 .timeout(timeoutMillis)
-                .get()
-                .outerHtml();
-        cache.put(url, html);
-        return html;
+                .ignoreContentType(true)
+                .maxBodySize(0)
+                .execute()
+                .body();
+        cache.put(url, body);
+        return body;
     }
 
     private void waitForInterval() throws IOException {

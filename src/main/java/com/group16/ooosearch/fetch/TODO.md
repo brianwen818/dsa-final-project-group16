@@ -9,7 +9,8 @@
 
 - [x] `PageFetcher.java`：用 Jsoup 抓網頁；設定 User-Agent 與請求間隔
 - [x] `PageCache.java`：網頁存到 `data/cache/`，用 `HashMap` 當索引；有快取就不重新抓
-- [ ] `TextExtractor.java`（Stage 1）：用 Stack（HW5）跳過 `<script>`、`<style>`、`<nav>`，只保留正文
+- [x] `MediaWikiClient.java`：MediaWiki API（取得條目 HTML、跨語言連結）；Stage 3 的 `MediaWikiProvider` 可以沿用
+- [x] `TextExtractor.java`（Stage 1）：用 Stack（HW5）跳過 `<script>`、`<style>`、`<nav>`，只保留正文
 
 ## 注意
 

@@ -1,9 +1,26 @@
-# 關鍵字與權重（Stage 1 初版）
-# 格式：每行「名稱 權重」，名稱可以包含空白，最後一個欄位是權重
-# 空行與 # 開頭的行會被略過；檔案須為 UTF-8
-假面騎士OOO 5
-火野映司 3
-安卡 3
-核心硬幣 2
-貪婪 2
-變身 1
+# 關鍵字表：由 cli/KeywordSeedAnalyzer 依 data/concepts.txt 於 2026-10-20 自動產生，請勿手動修改
+# 要增減關鍵字或寫法，請修改 data/concepts.txt 後重新執行；權重計算明細見 data/keyword-candidates/concept-weights.md
+# 格式：權重 | 關鍵字 | 其他寫法（以逗號分隔）；權重 0 為排除詞
+5.0 | 假面騎士OOO | 仮面ライダーオーズ, オーズ, OOO, Kamen Rider OOO, 幪面超人OOO, 假面骑士OOO
+4.5 | 核心硬幣 | コアメダル, Core Medal, Core Medals, 核心硬币
+4.4 | 安酷 | 安卡, アンク, Ankh
+4.3 | 貪婪 | グリード, Greeed, 貪婪怪人, 贪婪
+4.2 | Yummy | ヤミー
+4.2 | 火野映司 | 映司, Eiji Hino, Hino Eiji
+3.8 | 一般硬幣 | セルメダル, Cell Medal, Cell Medals, 普通代幣
+3.8 | 慾望 | 欲望
+3.7 | 卡佳里 | カザリ, Kazari
+3.5 | 烏霸 | ウヴァ, Uva, 乌霸
+3.5 | 梅茲魯 | メズール, Mezool
+3.4 | 假面騎士Birth | 仮面ライダーバース, Kamen Rider Birth, 假面骑士Birth
+3.3 | 佳美爾 | ガメル, Gamel
+3.3 | 鴻上基金會 | 鴻上ファウンデーション, Kougami Foundation, 鸿上基金会
+3.1 | OOO驅動器 | オーズドライバー, OOO Driver, OOO驱动器
+3.1 | 伊達明 | 伊达明, Akira Date
+3.1 | 多國料理店 | クスクシエ, Cous Coussier, Couscoussier
+2.9 | TaToBa COMBO | タトバコンボ, 鷹虎蝗, 塔托巴組合, 塔托巴组合
+2.8 | 鴻上光生 | 鸿上光生, Kousei Kougami
+2.8 | 真木清人 | Kiyoto Maki
+2.7 | 後藤慎太郎 | 后藤慎太郎, Shintaro Gotou, Shintaro Goto
+2.6 | 泉比奈 | Hina Izumi
+0.0 | 安卡拉 | 

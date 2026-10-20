@@ -24,7 +24,7 @@ public class KeywordList implements Iterable<Keyword> {
 
     /**
      * 讀取關鍵字檔（例如 data/keywords.txt），檔案須為 UTF-8。
-     * 每行格式為「名稱 權重」，名稱可以包含空白，最後一個欄位是權重。
+     * 每行格式為「權重 | 關鍵字 | 其他寫法1, 其他寫法2, ...」，其他寫法可省略。
      * 空行與 # 開頭的行會被略過。
      */
     public static KeywordList fromFile(Path path) throws IOException {
@@ -41,17 +41,28 @@ public class KeywordList implements Iterable<Keyword> {
     }
 
     private static Keyword parseLine(String line, Path path, int lineNumber) {
-        int split = Math.max(line.lastIndexOf(' '), line.lastIndexOf('\t'));
-        if (split <= 0) {
-            throw new IllegalArgumentException(path + " 第 " + lineNumber + " 行格式錯誤，應為「名稱 權重」：" + line);
+        String[] columns = line.split("\\|", -1);
+        if (columns.length < 2 || columns[1].isBlank()) {
+            throw new IllegalArgumentException(path + " 第 " + lineNumber + " 行格式錯誤，應為「權重 | 關鍵字 | 其他寫法」：" + line);
         }
-        String name = line.substring(0, split);
-        String weight = line.substring(split + 1);
+        String weight = columns[0].strip();
+        List<String> aliases = columns.length > 2 ? splitForms(columns[2]) : List.of();
         try {
-            return new Keyword(name, Double.parseDouble(weight));
+            return new Keyword(columns[1], Double.parseDouble(weight), aliases);
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException(path + " 第 " + lineNumber + " 行的權重不是數字：" + weight, e);
         }
+    }
+
+    /** 以半形或全形逗號分隔多個寫法。 */
+    public static List<String> splitForms(String text) {
+        List<String> forms = new ArrayList<>();
+        for (String form : text.split("[,，]")) {
+            if (!form.isBlank()) {
+                forms.add(form.strip());
+            }
+        }
+        return forms;
     }
 
     public void add(Keyword keyword) {
