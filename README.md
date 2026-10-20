@@ -3,12 +3,9 @@
 2026 Fall 資料結構期末專案（第 16 組）
 
 <p align="center">
-  <img src="https://upload.wikimedia.org/wikipedia/en/5/55/KROOO_Logo.jpg" alt="假面騎士OOO" width="480">
-</p>
-<p align="center">
   <img src="docs/images/ooo.png" alt="假面騎士OOO 塔托巴組合" width="360">
 </p>
-<p align="center"><sub>圖片來源：<a href="https://en.wikipedia.org/wiki/File:KROOO_Logo.jpg">Wikipedia</a>、<a href="https://www.amazon.co.jp/dp/4798623571">《DETAIL OF HEROES EX 仮面ライダーオーズ》封面</a>，版權屬 Toei / Ishimori Pro 所有</sub></p>
+<p align="center"><sub>圖片來源：<a href="https://www.amazon.co.jp/dp/4798623571">《DETAIL OF HEROES EX 仮面ライダーオーズ》封面</a>，版權屬 Toei / Ishimori Pro 所有</sub></p>
 
 > 本文件整理第一週以來的討論結果，作為全組的開發依據。原始討論見 [notes/first-week-discussion.md](notes/first-week-discussion.md)。
 
