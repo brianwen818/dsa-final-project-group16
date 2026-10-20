@@ -5,7 +5,10 @@
 <p align="center">
   <img src="https://upload.wikimedia.org/wikipedia/en/5/55/KROOO_Logo.jpg" alt="假面騎士OOO" width="480">
 </p>
-<p align="center"><sub>圖片來源：<a href="https://en.wikipedia.org/wiki/File:KROOO_Logo.jpg">Wikipedia</a>，版權屬 Toei / Ishimori Pro 所有</sub></p>
+<p align="center">
+  <img src="https://static.wikia.nocookie.net/kamenrider/images/4/4b/KRO-OOOtatoba_%28Tatoba_Kick%29.png/revision/latest?cb=20190902135747" alt="假面騎士OOO 塔托巴組合 — Tatoba Kick" width="320">
+</p>
+<p align="center"><sub>圖片來源：<a href="https://en.wikipedia.org/wiki/File:KROOO_Logo.jpg">Wikipedia</a>、<a href="https://kamenrider.fandom.com/wiki/File:KRO-OOOtatoba_(Tatoba_Kick).png">Kamen Rider Wiki</a>，版權屬 Toei / Ishimori Pro 所有</sub></p>
 
 > 本文件整理第一週以來的討論結果，作為全組的開發依據。原始討論見 [notes/first-week-discussion.md](notes/first-week-discussion.md)。
 
