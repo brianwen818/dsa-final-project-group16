@@ -65,38 +65,77 @@
 
 ```bash
 ./mvnw compile exec:java -Dexec.mainClass=com.group16.ooosearch.cli.Stage2Main
+```
 
 （PowerShell 的寫法見 README 第 7 節。）
 
-### 輸出範例
+### 輸出（2026-10-24，完整結果見 `data/results/stage2-results.csv`）
 
-```
-關鍵字：[[假面騎士OOO,5.0], [火野映司,3.0], [安卡,3.0], [核心硬幣,2.0], [貪婪,2.0], [變身,1.0]]
-名次	網址	分數	假面騎士OOO	火野映司	安卡	核心硬幣	貪婪	變身
-1	https://example.com/ooo/1	10.00	0	0	0	0	0	0
-2	https://example.com/ooo/2	10.00	0	0	0	0	0	0
-```
+========== 排名結果 ==========
+1. 網址: https://ja.wikipedia.org/wiki/%E4%BB%AE%E9%9D%A2%E3%83%A9%E3%82%A4%E3%83%80%E3%83%BC%E3%82%AA%E3%83%BC%E3%82%BA/OOO | 累積總分: 7026.9
+├── https://ja.wikipedia.org/wiki/%E4%BB%AE%E9%9D%A2%E3%83%A9%E3%82%A4%E3%83%80%E3%83%BC%E3%82%AA%E3%83%BC%E3%82%BA/OOO [單頁分: 7026.9, 累積總分: 7026.9] | 關鍵字次數: 假面騎士OOO:409 核心硬幣:122 安酷:178 貪婪:185 Yummy:172 火野映司:143一般硬幣:73 慾望:83 卡佳里:29 烏霸:30 梅茲魯:25 假面騎士Birth:44 佳美爾:26 鴻上基金會:24 OOO驅動器:19 伊達明:11 多國料理店:23 TaToBa COMBO:24 鴻上光生:8 真木清人:10 後藤慎太郎:7 泉比奈:8 
+  ├── https://ja.wikipedia.org/wiki/%E4%BB%AE%E9%9D%A2%E3%83%A9%E3%82%A4%E3%83%80%E3%83%BC%E3%82%B7%E3%83%AA%E3%83%BC%E3%82%BA [單頁分: 0.0, 累積總分: 0.0]
+  ├── https://ja.wikipedia.org/wiki/Wikipedia:IINFO [單頁分: 0.0, 累積總分: 0.0]
+  ├── https://ja.wikipedia.org/wiki/Wikipedia:%E3%82%A6%E3%82%A3%E3%82%AD%E3%83%9A%E3%83%87%E3%82%A3%E3%82%A2%E3%81%AF%E4%BD%95%E3%81%A7%E3%81%AF%E3%81%AA%E3%81%84%E3%81%8B [單頁分: 0.0, 累積總分: 0.0]
+  ├── https://ja.wikipedia.org/wiki/Wikipedia:%E9%81%8E%E5%89%B0%E3%81%AA%E5%86%85%E5%AE%B9%E3%81%AE%E6%95%B4%E7%90%86 [單頁分: 0.0, 累積總分: 0.0]
+  ├── https://ja.wikipedia.org/wiki/%E3%83%8E%E3%83%BC%E3%83%88:%E4%BB%AE%E9%9D%A2%E3%83%A9%E3%82%A4%E3%83%80%E3%83%BC%E3%82%AA%E3%83%BC%E3%82%BA/OOO [單頁分: 0.0, 累積總分: 0.0]
+  ├── https://ja.wikipedia.org/wiki/%E4%BB%AE%E9%9D%A2%E3%83%A9%E3%82%A4%E3%83%80%E3%83%BCW [單頁分: 0.0, 累積總分: 0.0]
+  ├── https://ja.wikipedia.org/wiki/%E4%BB%AE%E9%9D%A2%E3%83%A9%E3%82%A4%E3%83%80%E3%83%BC%E3%83%95%E3%82%A9%E3%83%BC%E3%82%BC [單頁分: 0.0, 累積總分: 0.0]
+  ├── https://ja.wikipedia.org/wiki/%E7%89%B9%E6%92%AE [單頁分: 0.0, 累積總分: 0.0]
+  ├── https://ja.wikipedia.org/wiki/%E3%83%86%E3%83%AC%E3%83%93%E3%83%89%E3%83%A9%E3%83%9E [單頁分: 0.0, 累積總分: 0.0]
+----------------------------------------
+2. 網址: https://zh.wikipedia.org/wiki/%E5%81%87%E9%9D%A2%E9%A8%8e%E5%A3%ABOOO | 累積總分: 2120.2999999999993
+├── https://zh.wikipedia.org/wiki/%E5%81%87%E9%9D%A2%E9%A8%8e%E5%A3%ABOOO [單頁分: 2120.2999999999993, 累積總分: 2120.2999999999993] | 關鍵字次數: 假面騎士OOO:102 核心硬幣:97 安酷:37 貪婪:32 Yummy:33 火野映司:36 一般硬幣:26 慾望:19 卡佳里:33 烏霸:13 梅茲魯:10 假面騎士Birth:8 佳美爾:5 鴻上基金會:12 OOO驅動器:12 伊達明:7 多國料理店:3 TaToBa COMBO:7 鴻上光生:4 真木清人:2 後藤慎太郎:6 泉比奈:2 
+  ├── https://zh.wikipedia.org/w/index.php?title=%E5%81%87%E9%9D%A2%E9%A8%8E%E5%A3%ABOOO&action=edit [單頁分: 0.0, 累積總分: 0.0]
+  ├── https://zh.wikipedia.org/wiki/Talk:%E5%81%87%E9%9D%A2%E9%A8%8E%E5%A3%ABOOO [單頁分: 0.0, 累積總分: 0.0]
+  ├── https://zh.wikipedia.org/wiki/Wikipedia:%E5%A6%82%E4%BD%95%E7%B7%A8%E5%AF%AB%E6%95%85%E4%BA%8B%E7%B0%A1%E4%BB%8B [單頁分: 0.0, 累積總分: 0.0]
+  ├── https://zh.wikipedia.org/wiki/Wikipedia:%E6%A0%BC%E5%BC%8F%E6%89%8B%E5%86%8C/%E8%99%9A%E6%9E%84 [單頁分: 0.0, 累積總分: 0.0]
+  ├── https://zh.wikipedia.org/wiki/Wikipedia:%E7%BB%B4%E5%9F%BA%E7%99%BE%E7%A7%91%E4%B8%8D%E6%98%AF%E4%BB%80%E4%B9%88 [單頁分: 0.0, 累積總分: 0.0]
+  ├── https://zh.wikipedia.org/wiki/WikiProject:ACG [單頁分: 0.0, 累積總分: 0.0]
+  ├── https://zh.wikipedia.org/wiki/File:Tango-nosources.svg [單頁分: 0.0, 累積總分: 0.0]
+  ├── https://zh.wikipedia.org/wiki/Wikipedia:%E5%88%97%E6%98%8E%E6%9D%A5%E6%BA%90 [單頁分: 0.0, 累積總分: 0.0]
+  ├── https://zh.wikipedia.org/wiki/Wikipedia:%E5%8F%AF%E9%9D%A0%E6%9D%A5%E6%BA%90 [單頁分: 0.0, 累積總分: 0.0]
+----------------------------------------
+3. 網址: https://zh.moegirl.org.cn/zh-tw/%E5%81%87%E9%9D%A2%E9%AA%91%E5%A3%ABOOO | 累積總分: 548.9000000000002
+├── https://zh.moegirl.org.cn/zh-tw/%E5%81%87%E9%9D%A2%E9%AA%91%E5%A3%ABOOO [單頁分: 548.9000000000002, 累積總分: 548.9000000000002] | 關鍵字次數: 假面騎士OOO:26 核心硬幣:4 安酷:20 貪婪:12 Yummy:4 火野映司:15 慾望:24 卡佳里:1 烏霸:1 梅茲魯:1 假面騎士Birth:4 佳美爾:1 鴻上基金會:6 OOO驅動器:2 伊達明:2 多國料理店:1 鴻上光生:4 真木清人:2 後藤慎太郎:2 泉比奈:2 
+  ├── https://zh.moegirl.org.cn/%E8%90%8C%E5%A8%98%E7%99%BE%E7%A7%91:%E6%B6%88%E6%AD%A7%E4%B9%89%E6%96%B9%E9%92%88 [單頁分: 0.0, 累積總分: 0.0]
+  ├── https://zh.moegirl.org.cn/%E5%81%87%E9%9D%A2%E9%AA%91%E5%A3%AB%E7%B3%BB%E5%88%97 [單頁分: 0.0, 累積總分: 0.0]
+  ├── https://zh.moegirl.org.cn/%E5%81%87%E9%9D%A2%E9%AA%91%E5%A3%ABOOO(%E9%AA%91%E5%A3%AB) [單頁分: 0.0, 累積總分: 0.0]
+  ├── https://zh.moegirl.org.cn/%E7%81%AB%E9%87%8E%E6%98%A0%E5%8F%B8 [單頁分: 0.0, 累積總分: 0.0]
+  ├── https://zh.moegirl.org.cn/index.php?title=%E5%81%87%E9%9D%A2%E9%AA%91%E5%A3%ABOOO&action=edit [單頁分: 0.0, 累積總分: 0.0]
+  ├── https://zh.moegirl.org.cn/Help:Wiki%E5%85%A5%E9%97%A8 [單頁分: 0.0, 累積總分: 0.0]
+  ├── https://zh.moegirl.org.cn/%E8%90%8C%E5%A8%98%E7%99%BE%E7%A7%91:%E7%BC%96%E8%BE%91%E8%A7%84%E8%8C%83 [單頁分: 0.0, 累積總分: 0.0]
+  ├── https://zh.moegirl.org.cn/%E8%90%8C%E5%A8%98%E7%99%BE%E7%A7%91:%E6%A8%A1%E6%9D%BF%E8%A7%84%E8%8C%83 [單頁分: 0.0, 累積總分: 0.0]
+  ├── https://zh.moegirl.org.cn/%E5%81%87%E9%9D%A2%E9%AA%91%E5%A3%ABW [單頁分: 0.0, 累積總分: 0.0]
+---------------------------------------- 
+
+觀察：
+- **條件式剪枝過濾了大量無關的系統導覽頁**：各網站的子節點雖然被抓出了諸如 action=edit（編輯頁）、Talk:（討論頁）或 Wikipedia: 政策指引頁，但因為其自身分數為 0.0，爬蟲皆自動停止向下擴展。
+- 非中文或替代站點的爬取分數偏低（或需處理動態渲染)
+- 各網站皆能透過根節點與子節點的層級關係，正確計算出累積總分與單頁分。
 
 ### 測試
 
-12 個測試全部通過（`Tests run: 12, Failures: 0, Errors: 0`）：
+相關單元測試與整合測試皆順利通過：
 
-- `model/KeywordListTest`（4）：讀檔、略過註解與空行、缺少權重或權重不是數字時拋出例外、專案的 `data/keywords.txt` 格式正確
-- `fetch/PageCacheTest`（3）：沒有快取時回傳空值、存取 HTML、重新建立物件後仍能從磁碟讀到
-- `FakeImplementationsTest`（5）：每個假實作都回傳格式正確的結果
-
-另外確認了 `mvnw spring-boot:run` 能在 8080 啟動（目前沒有頁面，回傳 404 屬正常），以及 `mvnw package` 能產生 jar。`PageFetcher` 的實際連網沒有寫測試，因為結果會受網路影響而不穩定。
+- `tree/LinkFilterTest`（4）：驗證是否能正確過濾掉非同網域、圖片、無效格式或特殊協議的外部連結。
+- `tree/SiteCrawlerTest`（3）：驗證整合 `MediaWikiClient` 的 BFS 爬蟲是否能依據設定的 `maxDepth` 與 `maxPagesPerTree` 正常運作，並測試分數為 0 時的條件式剪枝機制是否成功停止向下擴展。
+- `tree/WebTreeTest`（4）：驗證後序走訪（Post-order Traversal）與深度衰減公式（$\text{score} \times 0.5^{\text{depth}}$）的遞迴加總邏輯是否正確。
+- Stage 0 與 Stage 1 原有的核心計分與模型測試全數保持相容。
 
 ## 5. 遇到的問題與解法
 
 | 問題 | 解法 |
 |---|---|
-| 維基百科等大型網站含有大量 0 分的系統導覽、分類、隨機頁面 | 在 `pom.xml` 的 `spring-boot-maven-plugin` 指定 `mainClass` |
-| 子節點的深度（depth）未正確遞增導致衰減計算失準 | 在建立子節點時明確賦予 currentNode.getDepth() + 1 |
+| 維基百科等大型網站含有大量 0.0 分的系統導覽、分類、隨機頁面 | 在 `SiteCrawler` 中實作剪枝機制，當 `result.getScore() > 0.0` 時才往下擴展子連結 |
+| 子節點的深度（depth）未正確遞增導致衰減計算失準 | 在建立子節點時明確使用 `childNode.setDepth(currentNode.getDepth() + 1)` |
+| 部分 Wiki 站點與替代站點因前端 JavaScript 動態渲染或被 `403 Forbidden` 防火牆阻擋導致爬取失敗、分數為 0.0 | 將 `SiteCrawler` 整合 Stage 1 的 `MediaWikiClient`，透過官方 API 繞過前端渲染與反爬機制，成功讓萌娘百科等替代站點與跨語言維基（如日文維基）順利抓取並計分 | 
 
 
 ## 6. 未完成事項與交接
 
-- **未完成或延後的項目：** 動態調整深度衰減係數（目前固定為 0.5）。
+- **未完成或延後的項目：**
+  - 依動態調整深度衰減係數（目前固定為 0.5）。
+  - 爬取到的頁面或網站分數為 0.0 時，後續可規劃當作「關鍵字缺口」，自動觸發擴展機制，補充關聯詞 "假面騎士ooo" 後重新搜尋與評分。
 - **給下一個 Stage 的說明：**
-  - **Stage 3、4**：可直接透過 RealSiteRanker 取得多個網站的評分排名清單，並利用 WebTree 內的節點與 PageResult 進行搜尋結果的呈獻與整合。
+  - **Stage 3/4**：可直接透過 `RealSiteRanker` 取得多個網站的評分排名清單，並利用 `WebTree` 內的節點與 `PageResult` 進行搜尋結果的呈獻與整合。
