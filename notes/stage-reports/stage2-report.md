@@ -138,3 +138,4 @@
   - 爬取到的頁面或網站分數為 0.0 時，後續可規劃當作「關鍵字缺口」，自動觸發擴展機制，補充關聯詞 "假面騎士ooo" 後重新搜尋與評分。
 - **給下一個 Stage 的說明：**
   - **Stage 3/4**：可直接透過 `RealSiteRanker` 取得多個網站的評分排名清單，並利用 `WebTree` 內的節點與 `PageResult` 進行搜尋結果的呈獻與整合。
+  - **Stage 3**:在 Stage 3 實作 `MediaWikiProvider` 時，請務必沿用 Stage 2 驗證成功的 `MediaWikiClient` 呼叫官方 API 搜尋與抓取，避免在線上 Demo 時因為某些網站爆發 403 錯誤而導致程式中斷。
