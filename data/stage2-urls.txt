@@ -1,0 +1,4 @@
+# Stage 2 根網址與說明清單
+https://ja.wikipedia.org/wiki/%E4%BB%AE%E9%9D%A2%E3%83%A9%E3%82%A4%E3%83%80%E3%83%BC%E3%82%AA%E3%83%BC%E3%82%BA/OOO    日文維基百科：假面騎士OOO
+https://zh.wikipedia.org/wiki/%E5%81%87%E9%9D%A2%E9%A8%8e%E5%A3%ABOOO    中文維基百科：假面騎士OOO
+https://zh.moegirl.org.cn/zh-tw/%E5%81%87%E9%9D%A2%E9%AA%91%E5%A3%ABOOO    萌娘百科：假面騎士OOO

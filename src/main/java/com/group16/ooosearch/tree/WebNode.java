@@ -19,7 +19,8 @@ public class WebNode {
     private PageResult pageResult;
     /** 自己的分數加上所有子節點的 nodeScore（HW6 的定義）。 */
     private double nodeScore;
-
+    /** 節點深度，根節點為 0。 */
+    private int depth = 0;
     public WebNode(WebPage webPage) {
         this.webPage = webPage;
     }
@@ -51,11 +52,10 @@ public class WebNode {
 
     /** 根節點深度為 0（HW6 的 getDepth 從 1 開始，這裡改成 0，方便計算 0.5^深度）。 */
     public int getDepth() {
-        int depth = 0;
         for (WebNode node = parent; node != null; node = node.parent) {
-            depth++;
+            this.depth++;
         }
-        return depth;
+        return this.depth;
     }
 
     public PageResult getPageResult() {
@@ -72,5 +72,8 @@ public class WebNode {
 
     public void setNodeScore(double nodeScore) {
         this.nodeScore = nodeScore;
+    }
+    public void setDepth(int depth) {
+        this.depth = depth;
     }
 }
