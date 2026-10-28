@@ -82,5 +82,40 @@ $$\text{使用者關鍵字} \xrightarrow{\quad} \underbrace{\text{Stage 3 (本�
 
 ### 如何執行
 
+## 5. 遇到的問題與解法
+
+| 問題 | 解法 |
+|---|---|
+| **DuckDuckGo 轉址包裝**<br>DuckDuckGo 搜尋結果連結被包裝成 `//duckduckgo.com/l/?uddg=...` 形式，無法直接作為目標網址餵給爬蟲。 | 在 `DuckDuckGoProvider` 中利用 Jsoup 提取 href 屬性，搭配正則表達式解析 `uddg=` 後方的字串，並使用 `URLDecoder.decode(..., StandardCharsets.UTF_8)` 還原為原始 UTF-8 網址。 |
+| **目標網站 HTTP 404/403 異常中斷**<br>某些預先儲存或搜尋到的網址已失效（404 Not Found）或開啟反爬蟲機制（403 Forbidden，如百度百科），導致爬蟲拋出 Exception 中斷執行。 | 在 `Stage3Main` 的 `SiteCrawler` 爬取迴圈外圍加上 `try-catch` 例外處理機制。當個別網址抓取失敗時記錄錯誤 Log 並自動跳過，確保整個 Pipeline 能持續執行完成後續網站建樹。 |
+| **多 Provider 聚合時的重複網址與順序打亂問題**<br>不同搜尋引擎常回傳相同熱門網站（如維基百科條目），若使用一般 `HashSet` 雖然能去重但會打亂原始 Google 搜尋引擎的高相關度順序。 | 在 `SearchAggregator` 中採用 `LinkedHashSet` 作為網址容器。利用 `Set` 的 $O(1)$ 雜湊驗證過濾重複 URL，同時保留鏈結串列（LinkedList）特性的插入順序（Insertion Order），完美維持各搜尋引擎前端的高相關度排名。 |
+| **Google 網頁反爬蟲與 CAPTCHA 驗證阻擋**<br>若在線上環境（Live Search）直接自動化抓取 Google 搜尋結果，容易觸發 CAPTCHA 驗證碼阻擋與 HTTP 429 請求過多限制。 | 設計「離線＋線上」雙軌機制。離線透過 Selenium 以非 Headless 模式模擬真實瀏覽器行為預先抓取前 30 筆網址並存為 JSON 快取（`google_results.json`）；線上系統則透過 `CachedGoogleProvider` 讀取快取，避免線上查詢時被 Google 阻擋。 |
+| **MediaWiki 網路 API 回傳過時 API 警告**<br>編譯時 `MediaWikiProvider` 提示使用了被 Java 廢棄（Deprecated）的 API。 | 經檢查為 URL 連線處理類別警告，此為 Java 升級後的轉型提示，已透過確保字元集顯式指定為 `StandardCharsets.UTF_8` 解除編譯潛在疑慮，且不影響 JSON 資料解析邏輯。 |
+
+---
+
+## 6. 未完成事項與交接
+
+- **未完成或延後的項目：** 無
+- **給 Stage 4 負責人的交接說明：** `<下一位負責人需要知道的事，例如怎麼呼叫你的介面、有哪些限制>`
+  
+  ### 1. 介面呼叫方式 (How to Call SearchAggregator)
+  Stage 4 同學若需取得去重後的目標網址，可以透過以下方式建立與呼叫 `SearchAggregator`：
+
+  ```java
+  PageCache cache = new PageCache();
+  PageFetcher fetcher = new PageFetcher(cache);
+
+  // 1. 初始化各 Provider
+  SearchProvider googleProvider = new CachedGoogleProvider();
+  SearchProvider wikiProvider = new MediaWikiProvider(fetcher);
+  SearchProvider ddgProvider = new DuckDuckGoProvider(fetcher);
+
+  // 2. 傳入 Aggregator
+  SearchAggregator aggregator = new SearchAggregator(List.of(googleProvider, wikiProvider, ddgProvider));
+
+  // 3. 取得聚合後的 URL 清單 (例如每單一來源限制抓取 5 筆)
+  List<String> targetUrls = aggregator.search("假面騎士OOO", 5);
+
 ```bash
 ./mvnw clean compile exec:java -Dexec.mainClass="com.group16.ooosearch.cli.Stage3Main"
