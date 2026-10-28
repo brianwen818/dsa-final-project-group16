@@ -86,6 +86,8 @@
 ```bash
 ./mvnw clean compile exec:java -Dexec.mainClass="com.group16.ooosearch.cli.Stage3Main"
 ```
+
+```text
 ==================================================
    Stage 3: 關鍵字搜尋與 Stage 2 重新排名對比系統
 ==================================================
@@ -115,6 +117,7 @@ Failed to crawl: [https://baike.baidu.com/item/%E5%81%87%E9%9D%A2%E9%AA%91%E5%A3
 
 🎉 Stage 3 搜尋與 Google 排名比對完成！
 
+```
 ---
 
 ## 5. 遇到的問題與解法
