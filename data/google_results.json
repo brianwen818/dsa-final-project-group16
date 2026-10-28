@@ -1,0 +1,9 @@
+{
+  "_comment": "Stage 3 測試備註：因原始抓取檔結果為空陣列，手動填入測試 URL 以驗證 CachedGoogleProvider 與 SearchAggregator 之讀取及去重邏輯。",
+  "假面騎士OOO": [
+    { "url": "https://zh.wikipedia.org/wiki/%E5%81%87%E9%9D%A2%E9%A8%8E%E5%A3%ABOOO" },
+    { "url": "https://www.kamen-rider-official.com/ooo/" }
+  ],
+  "火野映司": [],
+  "安卡": []
+}
