@@ -1,4 +1,4 @@
-# Stage N Report：Stage 3 (Search Engine Aggregator & Pipeline Integration)
+# Stage 3 Report：Stage 3 (Search Engine Aggregator & Pipeline Integration)
 
 > 使用方式：複製本檔案並改名為 `stage3-report.md`，跟該 Stage 最後一個 Pull Request 一起提交。
 
@@ -134,27 +134,32 @@ Failed to crawl: [https://baike.baidu.com/item/%E5%81%87%E9%9D%A2%E9%AA%91%E5%A3
 
 ## 6. 未完成事項與交接
 
-- **未完成或延後的項目：** 無
+- **未完成或延後的項目：**
+  - **動態深度衰減係數優化（延後）**：目前 Stage 2 的 `WebTree` 在計算子頁面權重時採用固定衰減係數（$d = 0.5$）。未來可規劃由 Stage 4 依據搜尋結果樹的平均深度或關鍵字相關度動態調整該係數。
+  - **關鍵字缺口（Keyword Gap）自動擴展機制**：當爬取到的網站算出的分數為 `0.0` 時，後續可規劃自動觸發關鍵字擴充（例如自動補上同義詞或關聯詞 `"假面騎士OOO"`）並重新呼叫 Stage 3 進行二次搜尋與評分補強。
+
 - **給 Stage 4 負責人的交接說明：**
 
-### 1. 介面呼叫方式 (How to Call SearchAggregator)
+  ### 1. 核心 Pipeline 資料流與模組對接 (Dataflow Integration)
+  Stage 3 已於 `Stage3Main.java` 中建立完整的端到端（End-to-End）Pipeline。整體資料傳遞流程如下：
+  1. **Stage 3 搜尋與聚合**：`SearchAggregator` 透過 `SearchProvider` 多型介面順序呼叫 `CachedGoogleProvider`、`MediaWikiProvider` 與 `DuckDuckGoProvider` 取得目標 URL，並利用 `LinkedHashSet` 完成 $O(1)$ 自動去重且保留高相關度原始順序。
+  2. **Stage 2 爬蟲與建樹**：將聚合出的 URL 批次傳給 Stage 2 的 `SiteCrawler` 進行多層階（Depth）爬取，產出包含根節點與子頁面的 `WebTree` 結構體。
+  3. **Stage 4 算分與重排（預留點）**：`WebTree` 節點目前分數預設為 `0.00`，等待 Stage 4 引入關鍵字字典進行算分與重新排序。
 
-Stage 4 同學若需取得去重後的目標網址，可以透過以下方式建立與呼叫 `SearchAggregator`：
+  ### 2. 介面呼叫方式 (How to Call SearchAggregator)
+  Stage 4 若需單獨呼叫 Stage 3 模組以動態取得去重網址，呼叫範例如下：
 
-```java
-PageCache cache = new PageCache();
-PageFetcher fetcher = new PageFetcher(cache);
+  ```java
+  PageCache cache = new PageCache();
+  PageFetcher fetcher = new PageFetcher(cache);
 
-// 1. 初始化各 Provider
-SearchProvider googleProvider = new CachedGoogleProvider();
-SearchProvider wikiProvider = new MediaWikiProvider(fetcher);
-SearchProvider ddgProvider = new DuckDuckGoProvider(fetcher);
+  // 1. 初始化各 SearchProvider（其中 MediaWikiProvider 務必沿用 Stage 2 驗證穩定的 MediaWikiClient）
+  SearchProvider googleProvider = new CachedGoogleProvider();
+  SearchProvider wikiProvider = new MediaWikiProvider(fetcher);
+  SearchProvider ddgProvider = new DuckDuckGoProvider(fetcher);
 
-// 2. 傳入 Aggregator
-SearchAggregator aggregator = new SearchAggregator(List.of(googleProvider, wikiProvider, ddgProvider));
+  // 2. 傳入 Aggregator 進行多源整合
+  SearchAggregator aggregator = new SearchAggregator(List.of(googleProvider, wikiProvider, ddgProvider));
 
-// 3. 取得聚合後的 URL 清單 (例如每單一來源限制抓取 5 筆)
-List<String> targetUrls = aggregator.search("假面騎士OOO", 5);
-
-```
----
+  // 3. 取得去重且保留優先度順序的 URL 清單 (例如每單一來源抓取 5 筆)
+  List<String> targetUrls = aggregator.search("假面騎士OOO", 5);
