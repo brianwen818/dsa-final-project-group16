@@ -1,4 +1,4 @@
-# Stage 3 Report：Stage 3 (Search Engine Aggregator & Pipeline Integration)
+# Stage 3 Report：Stage 3 (Search Engine Aggregator & Pipeline Integration)只給關鍵字，自己找網站（Refine the Rank of Google）
 
 > 使用方式：複製本檔案並改名為 `stage3-report.md`，跟該 Stage 最後一個 Pull Request 一起提交。
 
