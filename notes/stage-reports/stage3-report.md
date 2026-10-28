@@ -23,7 +23,8 @@
 ### 🔗 前後 Stage 系統關聯架構
 
 系統整體資料流向如下：
-$$\text{使用者關鍵字} \xrightarrow{\quad} \underbrace{\text{Stage 3 (本階段)}}_{\text{多源搜尋、去重、排序保留}} \xrightarrow{\quad\text{URL 清單}\quad} \underbrace{\text{Stage 2 (網頁爬蟲)}}_{\text{DOM 解析、子連結爬取、建立 WebTree}} \xrightarrow{\quad\text{WebTree 結構}\quad} \underbrace{\text{Stage 4 (權重排序)}}_{\text{關鍵字字典比對、節點算分與 Re-rank}}$$
+
+**使用者關鍵字** ➔ **Stage 3 (本階段)** *(多源搜尋、去重、排序保留)* ➔ **URL 清單** ➔ **Stage 2 (網頁爬蟲)** *(DOM 解析、子連結爬取、建立 WebTree)* ➔ **WebTree 結構** ➔ **Stage 4 (權重排序)** *(關鍵字字典比對、節點算分與 Re-rank)*
 
 1. **與 Stage 2 的關聯（上游進入點）**：
    * **Stage 2 角色**：負責針對單一根網址（Root URL）進行多層階（Depth）爬取，將 HTML 頁面轉化為節點樹狀結構（`WebTree` / `WebNode`）。
@@ -48,7 +49,7 @@ $$\text{使用者關鍵字} \xrightarrow{\quad} \underbrace{\text{Stage 3 (本�
 | `com/group16/ooosearch/search/SearchAggregator.java` | 搜尋聚合器，負責順序呼叫多個 `SearchProvider` 並進行 URL 自動去重 |
 | `com/group16/ooosearch/search/GoogleScraper.java` | 離線開發工具，透過 Selenium 預先抓取 Google 搜尋結果並存為快取檔 |
 | `com/group16/ooosearch/search/TestProviders.java` | 單元測試類別，用於獨立驗證各個 SearchProvider 的網址抓取與解析正確性 |
-| `com/group16/ooosearch/cli/Stage3Main.java` | Stage 3 主程式入口，執行「關鍵字搜尋 $\rightarrow$ 聚合去重 $\rightarrow$ Stage 2 爬蟲建樹 $\rightarrow$ Google 排名對比」流水線 |
+| `com/group16/ooosearch/cli/Stage3Main.java` | Stage 3 主程式入口，執行「關鍵字搜尋 ➔ 聚合去重 ➔ Stage 2 爬蟲建樹 ➔ Google 排名對比」流水線 |
 
 ### 用到的資料結構與演算法
 
@@ -78,43 +79,6 @@ $$\text{使用者關鍵字} \xrightarrow{\quad} \underbrace{\text{Stage 3 (本�
 
 ---
 
-## 4. 執行結果
-
-### 如何執行
-
-```bash
-./mvnw clean compile exec:java -Dexec.mainClass="com.group16.ooosearch.cli.Stage3Main"
-
-```text
-==================================================
-   Stage 3: 關鍵字搜尋與 Stage 2 重新排名對比系統
-==================================================
-
-🔍 搜尋關鍵字: [假面騎士OOO]
-✅ 已透過 SearchAggregator 取得 10 筆去重後目標網址。
---------------------------------------------------
-
-🚀 執行 Stage 2 爬蟲與 WebTree 建樹計分中...
-Failed to crawl: https://www.kamen-rider-official.com/ooo/ (HTTP error fetching URL. Status=404, URL=[https://www.kamen-rider-official.com/ooo/])
-Failed to crawl: https://baike.baidu.com/item/%E5%81%87%E9%9D%A2%E9%AA%91%E5%A3%AB%E6%AC%A7%E5%85%B9/56838358 (HTTP error fetching URL. Status=403, URL=[https://baike.baidu.com/item/%E5%81%87%E9%9D%A2%E9%AA%91%E5%A3%AB%E6%AC%A7%E5%85%B9/56838358])
-
-==========================================================================================================
-我們的排名  | Google 排名    | 我們的分數      | 網頁標題 / 說明                         | 網址
-----------------------------------------------------------------------------------------------------------
-  1        | 1              | 0.00         | 假面騎士OOO                             | https://zh.wikipedia.org/wiki/%E5%81%87%E9%9D%A2%E9%A8%8E%E5%A3%ABOOO
-  2        | 2              | 0.00         | https://www.kamen-rider-official.co...   | https://www.kamen-rider-official.com/ooo/
-  3        | 無 (其他來源)     | 0.00         | 假面騎士系列                            | https://zh.wikipedia.org/wiki/%E5%81%87%E9%9D%A2%E9%A8%8E%E5%A3%AB%E7%B3%BB%E5%88%97
-  4        | 無 (其他來源)     | 0.00         | 假面騎士×假面騎士_Fourze_&_OOO_Movie大戰_Mega... | https://zh.wikipedia.org/wiki/%E5%81%87%E9%9D%A2%E9%A8%8E%E5%A3%AB%C3%97%E5%81%87%E9%9D%A2%E9%A8%8E%E5%A3%AB_Fourze_%26_OOO_Movie%E5%A4%A7%E6%88%B0_Mega_Max
-  5        | 無 (其他來源)     | 0.00         | 假面騎士Fourze                          | https://zh.wikipedia.org/wiki/%E5%81%87%E9%9D%A2%E9%A8%8E%E5%A3%ABFourze
-  6        | 無 (其他來源)     | 0.00         | 假面騎士OOO角色列表                      | https://zh.wikipedia.org/wiki/%E5%81%87%E9%9D%A2%E9%A8%8E%E5%A3%ABOOO%E8%A7%92%E8%89%B2%E5%88%97%E8%A1%A8
-  7        | 無 (其他來源)     | 0.00         | 假面騎士OOO                             | https://zh.wikipedia.org/zh-tw/%E5%81%87%E9%9D%A2%E9%A8%8E%E5%A3%ABOOO
-  8        | 無 (其他來源)     | 0.00         | 56838358                               | https://baike.baidu.com/item/%E5%81%87%E9%9D%A2%E9%AA%91%E5%A3%AB%E6%AC%A7%E5%85%B9/56838358
-  9        | 無 (其他來源)     | 0.00         | 135514.html                            | https://gimyai.tw/detail/135514.html
-  10       | 無 (其他來源)     | 0.00         | 假面騎士OOO                             | https://www.newton.com.tw/wiki/%E5%81%87%E9%9D%A2%E9%A8%8E%E5%A3%ABOOO
-==========================================================================================================
-
-🎉 Stage 3 搜尋與 Google 排名比對完成！
-－－－
 ## 5. 遇到的問題與解法
 
 | 問題 | 解法 |
@@ -130,22 +94,60 @@ Failed to crawl: https://baike.baidu.com/item/%E5%81%87%E9%9D%A2%E9%AA%91%E5%A3%
 ## 6. 未完成事項與交接
 
 - **未完成或延後的項目：** 無
-- **給 Stage 4 負責人的交接說明：** `<下一位負責人需要知道的事，例如怎麼呼叫你的介面、有哪些限制>`
-  
-  ### 1. 介面呼叫方式 (How to Call SearchAggregator)
-  Stage 4 同學若需取得去重後的目標網址，可以透過以下方式建立與呼叫 `SearchAggregator`：
+- **給 Stage 4 負責人的交接說明：**
 
-  ```java
-  PageCache cache = new PageCache();
-  PageFetcher fetcher = new PageFetcher(cache);
+### 1. 介面呼叫方式 (How to Call SearchAggregator)
 
-  // 1. 初始化各 Provider
-  SearchProvider googleProvider = new CachedGoogleProvider();
-  SearchProvider wikiProvider = new MediaWikiProvider(fetcher);
-  SearchProvider ddgProvider = new DuckDuckGoProvider(fetcher);
+Stage 4 同學若需取得去重後的目標網址，可以透過以下方式建立與呼叫 `SearchAggregator`：
 
-  // 2. 傳入 Aggregator
-  SearchAggregator aggregator = new SearchAggregator(List.of(googleProvider, wikiProvider, ddgProvider));
+```java
+PageCache cache = new PageCache();
+PageFetcher fetcher = new PageFetcher(cache);
 
-  // 3. 取得聚合後的 URL 清單 (例如每單一來源限制抓取 5 筆)
-  List<String> targetUrls = aggregator.search("假面騎士OOO", 5);
+// 1. 初始化各 Provider
+SearchProvider googleProvider = new CachedGoogleProvider();
+SearchProvider wikiProvider = new MediaWikiProvider(fetcher);
+SearchProvider ddgProvider = new DuckDuckGoProvider(fetcher);
+
+// 2. 傳入 Aggregator
+SearchAggregator aggregator = new SearchAggregator(List.of(googleProvider, wikiProvider, ddgProvider));
+
+// 3. 取得聚合後的 URL 清單 (例如每單一來源限制抓取 5 筆)
+List<String> targetUrls = aggregator.search("假面騎士OOO", 5);
+
+---
+## 4. 執行結果
+
+### 如何執行
+
+```bash
+./mvnw clean compile exec:java -Dexec.mainClass="com.group16.ooosearch.cli.Stage3Main"
+
+==================================================
+   Stage 3: 關鍵字搜尋與 Stage 2 重新排名對比系統
+==================================================
+
+🔍 搜尋關鍵字: [假面騎士OOO]
+✅ 已透過 SearchAggregator 取得 10 筆去重後目標網址。
+--------------------------------------------------
+
+🚀 執行 Stage 2 爬蟲與 WebTree 建樹計分中...
+Failed to crawl: [https://www.kamen-rider-official.com/ooo/](https://www.kamen-rider-official.com/ooo/) (HTTP error fetching URL. Status=404, URL=[[https://www.kamen-rider-official.com/ooo/](https://www.kamen-rider-official.com/ooo/)])
+Failed to crawl: [https://baike.baidu.com/item/%E5%81%87%E9%9D%A2%E9%AA%91%E5%A3%AB%E6%AC%A7%E5%85%B9/56838358](https://baike.baidu.com/item/%E5%81%87%E9%9D%A2%E9%AA%91%E5%A3%AB%E6%AC%A7%E5%85%B9/56838358) (HTTP error fetching URL. Status=403, URL=[[https://baike.baidu.com/item/%E5%81%87%E9%9D%A2%E9%AA%91%E5%A3%AB%E6%AC%A7%E5%85%B9/56838358](https://baike.baidu.com/item/%E5%81%87%E9%9D%A2%E9%AA%91%E5%A3%AB%E6%AC%A7%E5%85%B9/56838358)])
+
+==========================================================================================================
+我們的排名  | Google 排名     | 我們的分數       | 網頁標題 / 說明                         | 網址
+----------------------------------------------------------------------------------------------------------
+  1        | 1              | 0.00          | 假面騎士OOO                             | [https://zh.wikipedia.org/wiki/%E5%81%87%E9%9D%A2%E9%A8%8E%E5%A3%ABOOO](https://zh.wikipedia.org/wiki/%E5%81%87%E9%9D%A2%E9%A8%8E%E5%A3%ABOOO)
+  2        | 2              | 0.00          | [https://www.kamen-rider-official.co](https://www.kamen-rider-official.co)...   | [https://www.kamen-rider-official.com/ooo/](https://www.kamen-rider-official.com/ooo/)
+  3        | 無 (其他來源)     | 0.00          | 假面騎士系列                            | [https://zh.wikipedia.org/wiki/%E5%81%87%E9%9D%A2%E9%A8%8E%E5%A3%AB%E7%B3%BB%E5%88%97](https://zh.wikipedia.org/wiki/%E5%81%87%E9%9D%A2%E9%A8%8E%E5%A3%AB%E7%B3%BB%E5%88%97)
+  4        | 無 (其他來源)     | 0.00          | 假面騎士×假面騎士_Fourze_&_OOO_Movie大戰_Mega... | [https://zh.wikipedia.org/wiki/%E5%81%87%E9%9D%A2%E9%A8%8E%E5%A3%AB%C3%97%E5%81%87%E9%9D%A2%E9%A8%8E%E5%A3%AB_Fourze_%26_OOO_Movie%E5%A4%A7%E6%88%B0_Mega_Max](https://zh.wikipedia.org/wiki/%E5%81%87%E9%9D%A2%E9%A8%8E%E5%A3%AB%C3%97%E5%81%87%E9%9D%A2%E9%A8%8E%E5%A3%AB_Fourze_%26_OOO_Movie%E5%A4%A7%E6%88%B0_Mega_Max)
+  5        | 無 (其他來源)     | 0.00          | 假面騎士Fourze                          | [https://zh.wikipedia.org/wiki/%E5%81%87%E9%9D%A2%E9%A8%8E%E5%A3%ABFourze](https://zh.wikipedia.org/wiki/%E5%81%87%E9%9D%A2%E9%A8%8E%E5%A3%ABFourze)
+  6        | 無 (其他來源)     | 0.00          | 假面騎士OOO角色列表                      | [https://zh.wikipedia.org/wiki/%E5%81%87%E9%9D%A2%E9%A8%8E%E5%A3%ABOOO%E8%A7%92%E8%89%B2%E5%88%97%E8%A1%A8](https://zh.wikipedia.org/wiki/%E5%81%87%E9%9D%A2%E9%A8%8E%E5%A3%ABOOO%E8%A7%92%E8%89%B2%E5%88%97%E8%A1%A8)
+  7        | 無 (其他來源)     | 0.00          | 假面騎士OOO                             | [https://zh.wikipedia.org/zh-tw/%E5%81%87%E9%9D%A2%E9%A8%8E%E5%A3%ABOOO](https://zh.wikipedia.org/zh-tw/%E5%81%87%E9%9D%A2%E9%A8%8E%E5%A3%ABOOO)
+  8        | 無 (其他來源)     | 0.00          | 56838358                                | [https://baike.baidu.com/item/%E5%81%87%E9%9D%A2%E9%AA%91%E5%A3%AB%E6%AC%A7%E5%85%B9/56838358](https://baike.baidu.com/item/%E5%81%87%E9%9D%A2%E9%AA%91%E5%A3%AB%E6%AC%A7%E5%85%B9/56838358)
+  9        | 無 (其他來源)     | 0.00          | 135514.html                             | [https://gimyai.tw/detail/135514.html](https://gimyai.tw/detail/135514.html)
+  10       | 無 (其他來源)     | 0.00          | 假面騎士OOO                             | [https://www.newton.com.tw/wiki/%E5%81%87%E9%9D%A2%E9%A8%8E%E5%A3%ABOOO](https://www.newton.com.tw/wiki/%E5%81%87%E9%9D%A2%E9%A8%8E%E5%A3%ABOOO)
+==========================================================================================================
+
+🎉 Stage 3 搜尋與 Google 排名比對完成！
