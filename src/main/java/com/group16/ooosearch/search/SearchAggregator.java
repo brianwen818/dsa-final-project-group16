@@ -1,5 +1,7 @@
 package com.group16.ooosearch.search;
 
+import com.group16.ooosearch.fetch.UrlCanonicalizer;
+
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -7,7 +9,7 @@ import java.util.Set;
 
 /**
  * SearchAggregator 負責聚合多個 SearchProvider 的搜尋結果，
- * 並透過 LinkedHashSet 進行自動去重與保留順序。
+ * 先把網址正規化，再透過 LinkedHashSet 進行自動去重與保留順序。
  */
 public class SearchAggregator {
 
@@ -32,7 +34,9 @@ public class SearchAggregator {
             try {
                 List<String> results = provider.search(query, limitPerProvider);
                 if (results != null) {
-                    uniqueUrls.addAll(results);
+                    for (String url : results) {
+                        uniqueUrls.add(UrlCanonicalizer.canonicalize(url));
+                    }
                 }
             } catch (Exception e) {
                 System.err.println("⚠️ Provider [" + provider.getClass().getSimpleName() + "] 搜尋失敗: " + e.getMessage());

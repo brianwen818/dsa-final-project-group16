@@ -71,7 +71,7 @@ private void printNodeRecursive(WebNode node, int indent) {
 
     // 取得分數（單頁分與累積總分）
     double pageScore = (node.getPageResult() != null) ? node.getPageResult().getScore() : 0.0;
-    System.out.print(" [單頁分: " + pageScore + ", 累積總分: " + node.getNodeScore() + "]");
+    System.out.print(String.format(" [單頁分: %.1f, 累積總分: %.1f]", pageScore, node.getNodeScore()));
 
     // 印出關鍵字次數
     if (node.getPageResult() != null && node.getPageResult().getKeywordCounts() != null) {

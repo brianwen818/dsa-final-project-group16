@@ -3,161 +3,127 @@ package com.group16.ooosearch.tree;
 import com.group16.ooosearch.fetch.MediaWikiClient;
 import com.group16.ooosearch.fetch.PageCache;
 import com.group16.ooosearch.fetch.PageFetcher;
+import com.group16.ooosearch.fetch.UrlCanonicalizer;
 import com.group16.ooosearch.model.KeywordList;
-import com.group16.ooosearch.model.PageResult;
 import com.group16.ooosearch.model.WebPage;
 import com.group16.ooosearch.scoring.KeywordPageScorer;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 
-import java.nio.file.Path;
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Set;
 
 public class SiteCrawler {
+    /** 每個節點最多展開幾個子頁面，避免額度在第 1 層就用完，讓樹能長到更深。 */
+    private static final int DEFAULT_MAX_CHILDREN_PER_NODE = 5;
+    /** 維護模板、導覽框、編輯連結、參考資料等區塊的連結不算正文連結。 */
+    private static final String NON_CONTENT_BLOCKS =
+            "nav, header, footer, aside, .ambox, .navbox, .metadata, .hatnote, .catlinks, "
+            + ".mw-editsection, .reference, .references, .reflist";
+
     private final KeywordPageScorer scorer;
     private final int maxDepth;
     private final int maxPagesPerTree;
+    private final int maxChildrenPerNode;
     private final PageFetcher pageFetcher;
 
     public SiteCrawler(int maxDepth, int maxPagesPerTree) {
+        this(maxDepth, maxPagesPerTree, DEFAULT_MAX_CHILDREN_PER_NODE, new PageFetcher(new PageCache()));
+    }
+
+    public SiteCrawler(int maxDepth, int maxPagesPerTree, int maxChildrenPerNode, PageFetcher pageFetcher) {
         this.scorer = new KeywordPageScorer();
         this.maxDepth = maxDepth;
         this.maxPagesPerTree = maxPagesPerTree;
-        
-        PageCache cache = new PageCache();
-        this.pageFetcher = new PageFetcher(cache);
+        this.maxChildrenPerNode = maxChildrenPerNode;
+        this.pageFetcher = pageFetcher;
     }
 
-    public WebTree crawl(String rootUrl) {
-        KeywordList keywords;
+    /** 根網址抓取失敗時，回傳只有根節點、getPageResult() 為 null 的樹，代表無法評分。 */
+    public WebTree crawl(String rootUrl, KeywordList keywords) {
+        WebPage rootPage;
         try {
-            keywords = KeywordList.fromFile(Path.of("data", "keywords.txt"));
+            rootPage = loadPage(rootUrl);
         } catch (Exception e) {
-            System.err.println("無法讀取關鍵字檔案: " + e.getMessage());
-            keywords = new KeywordList(); 
+            System.err.println("Failed to crawl: " + rootUrl + " (" + e.getMessage() + ")");
+            return new WebTree(new WebPage(rootUrl, extractTitleFromUrl(rootUrl), ""));
         }
 
-        // 根節點初始化時帶入從 URL 解析的標題
-        String rootTitle = extractTitleFromUrl(rootUrl);
-        WebPage rootWebPage = new WebPage(rootUrl, rootTitle, "");
-        WebTree tree = new WebTree(rootWebPage);
+        WebTree tree = new WebTree(rootPage);
         WebNode rootNode = tree.getRoot();
+        rootNode.setPageResult(scorer.score(rootPage, keywords));
 
         Set<String> visitedUrls = new HashSet<>();
+        visitedUrls.add(UrlCanonicalizer.canonicalize(rootUrl));
         Queue<WebNode> queue = new LinkedList<>();
-
         queue.add(rootNode);
-        visitedUrls.add(rootUrl);
         int crawledCount = 1;
 
         while (!queue.isEmpty() && crawledCount < maxPagesPerTree) {
             WebNode currentNode = queue.poll();
-            String currentUrl = currentNode.getWebPage().getUrl();
+            // 條件式剪枝：超過深度或 0 分的頁面不再往下展開
+            if (currentNode.getDepth() >= maxDepth || currentNode.getPageResult().getScore() <= 0.0) {
+                continue;
+            }
 
-            try {
-                WebPage page = null;
-                Document doc = null;
+            Document doc = Jsoup.parse(currentNode.getWebPage().getHtml(), currentNode.getWebPage().getUrl());
+            doc.select(NON_CONTENT_BLOCKS).remove();
 
-                // 1. 判斷是否為 MediaWiki 站點
-                if (currentUrl.contains("wikipedia.org") || currentUrl.contains("fandom.com") || currentUrl.contains("kamenrider.huijiwiki.com") || currentUrl.contains("moegirl.org.cn")) {
-                    String host = extractHost(currentUrl);
-                    String title = extractWikiTitle(currentUrl);
-                    
-                    if (host != null && title != null && !title.isEmpty()) {
-                        try {
-                            MediaWikiClient mwClient = new MediaWikiClient(host, pageFetcher);
-                            page = mwClient.parse(title, currentUrl.contains("zh.wikipedia.org") ? "zh-tw" : null);
-                            doc = Jsoup.parse(page.getHtml(), currentUrl);
-                        } catch (Exception apiEx) {
-                            // API 失敗走備用邏輯
-                        }
-                    }
+            int childCount = 0;
+            for (Element link : doc.select("a[href]")) {
+                String absUrl = link.absUrl("href");
+                if (!LinkFilter.isValidLink(rootUrl, absUrl) || !visitedUrls.add(UrlCanonicalizer.canonicalize(absUrl))) {
+                    continue;
                 }
-
-                // 2. 如果不是 MediaWiki 或者是 API 抓取失敗，使用 Jsoup
-                if (page == null || doc == null) {
-                    String htmlContent = pageFetcher.fetchText(currentUrl);
-                    doc = Jsoup.parse(htmlContent, currentUrl);
-                    String title = doc.title();
-                    if (title == null || title.trim().isEmpty()) {
-                        title = extractTitleFromUrl(currentUrl);
-                    }
-                    page = new WebPage(currentUrl, title, htmlContent);
+                try {
+                    WebPage childPage = loadPage(absUrl);
+                    WebNode childNode = new WebNode(childPage);
+                    childNode.setPageResult(scorer.score(childPage, keywords));
+                    currentNode.addChild(childNode);
+                    queue.add(childNode);
+                    crawledCount++;
+                    childCount++;
+                } catch (Exception childEx) {
+                    // 子頁面抓取失敗則略過
                 }
-
-                // 3. 進行 Stage 1 的關鍵字計分
-                PageResult result = scorer.score(page, keywords);
-                currentNode.setPageResult(result);
-
-                // 4. 條件式剪枝與 BFS 擴展子連結
-                if (currentNode.getDepth() < maxDepth && result.getScore() > 0.0) {
-                    Elements links = doc.select("a[href]");
-                    for (Element link : links) {
-                        String absUrl = link.absUrl("href");
-
-                        if (LinkFilter.isValidLink(rootUrl, absUrl) && !visitedUrls.contains(absUrl)) {
-                            visitedUrls.add(absUrl);
-                            
-                            try {   
-                                // 為了讓子節點也有分數與關鍵字次數，我們需要抓取子頁面的內容
-                                WebPage childPage = null;
-                                Document childDoc = null;
-                                
-                                // 判斷子頁面是否也適用 MediaWiki API
-                                if (absUrl.contains("wikipedia.org") || absUrl.contains("moegirl.org.cn")) {
-                                    String host = extractHost(absUrl);
-                                    String wikiTitle = extractWikiTitle(absUrl);
-                                    if (host != null && wikiTitle != null && !wikiTitle.isEmpty()) {
-                                        try {
-                                            MediaWikiClient mwClient = new MediaWikiClient(host, pageFetcher);
-                                            childPage = mwClient.parse(wikiTitle, absUrl.contains("zh.wikipedia.org") ? "zh-tw" : null);
-                                            childDoc = Jsoup.parse(childPage.getHtml(), absUrl);
-                                        } catch (Exception ignored) {}
-                                    }
-                                }
-                                
-                                // 如果不是 Wiki 或是 API 失敗，用 Jsoup 抓取
-                                if (childPage == null || childDoc == null) {
-                                    String childHtml = pageFetcher.fetchText(absUrl);
-                                    childDoc = Jsoup.parse(childHtml, absUrl);
-                                    String childTitle = childDoc.title();
-                                    if (childTitle == null || childTitle.trim().isEmpty()) {
-                                        childTitle = extractTitleFromUrl(absUrl);
-                                    }
-                                    childPage = new WebPage(absUrl, childTitle, childHtml);
-                                }
-
-                                // 對子頁面進行 Stage 1 計分
-                                PageResult childResult = scorer.score(childPage, keywords);
-
-                                WebNode childNode = new WebNode(childPage);
-                                childNode.setPageResult(childResult); // 賦予計分結果
-                                childNode.setDepth(currentNode.getDepth() + 1);
-                                currentNode.addChild(childNode);
-                                
-                                queue.add(childNode);
-                                crawledCount++;
-
-                                if (crawledCount >= maxPagesPerTree) break;
-                                } catch (Exception childEx) {
-                                // 子頁面抓取失敗則略過
-                                }
-                            }
-                        }
-                    }
-
-                     
-            } catch (Exception e) {
-                System.err.println("Failed to crawl: " + currentUrl + " (" + e.getMessage() + ")");
+                if (crawledCount >= maxPagesPerTree || childCount >= maxChildrenPerNode) {
+                    break;
+                }
             }
         }
 
         return tree;
+    }
+
+    /** MediaWiki 站點優先用 API（可避開前端渲染與反爬蟲），失敗或其他網站則直接抓 HTML。 */
+    private WebPage loadPage(String url) throws IOException {
+        if (isMediaWikiSite(url)) {
+            String host = extractHost(url);
+            String title = extractWikiTitle(url);
+            if (host != null && title != null && !title.isEmpty()) {
+                try {
+                    return new MediaWikiClient(host, pageFetcher)
+                            .parse(title, url.contains("zh.wikipedia.org") ? "zh-tw" : null);
+                } catch (Exception apiEx) {
+                    // API 失敗走備用邏輯
+                }
+            }
+        }
+        String html = pageFetcher.fetchText(url);
+        String title = Jsoup.parse(html, url).title();
+        if (title == null || title.trim().isEmpty()) {
+            title = extractTitleFromUrl(url);
+        }
+        return new WebPage(url, title, html);
+    }
+
+    private boolean isMediaWikiSite(String url) {
+        return url.contains("wikipedia.org") || url.contains("fandom.com")
+                || url.contains("kamenrider.huijiwiki.com") || url.contains("moegirl.org.cn");
     }
 
     private String extractHost(String urlStr) {

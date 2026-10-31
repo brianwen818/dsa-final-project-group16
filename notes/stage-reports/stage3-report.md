@@ -163,3 +163,30 @@ Failed to crawl: [https://baike.baidu.com/item/%E5%81%87%E9%9D%A2%E9%AA%91%E5%A3
 
   // 3. 取得去重且保留優先度順序的 URL 清單 (例如每單一來源抓取 5 筆)
   List<String> targetUrls = aggregator.search("假面騎士OOO", 5);
+
+
+## 7. 修正紀錄（2026-10-31）
+
+老師的 Stage 3 規定要套用 Stage 2 的排名，所以計分不是留給 Stage 4 的工作，第 1、6 節「分數等 Stage 4 計算」的說法不正確。以下是修正內容：
+
+| 問題 | 修正 |
+|---|---|
+| 分數全為 0.00，排名實際上是輸入順序 | `Stage3Main` 改用 `RealSiteRanker`，並讀取 `data/keywords.txt` |
+| 查詢寫死為「假面騎士OOO」 | 可用參數指定，例如 `-Dexec.args="火野映司"` |
+| `/wiki/` 與 `/zh-tw/` 同一頁重複出現 | `SearchAggregator` 先用 `UrlCanonicalizer` 正規化再去重 |
+| 抓不到的網站顯示為 0 分 | 排在最後並標示「無法評分」 |
+| 結果沒有存檔 | 輸出 `data/results/stage3-results.csv` |
+
+重跑「假面騎士OOO」共 9 個網址，前 3 名是 newton.com.tw（5554.57）、中文維基角色列表（3325.55）、中文維基主條目（2159.50）。官網網址回傳 404，標示為無法評分。百度百科回傳的頁面標題只有「百度百科」且 0 分，內容可能不是條目本身，尚未確認。
+
+**Google 對照組（2026-10-31 更新）：** `data/google_results.json` 已換成組員在瀏覽器手動記錄的 5 組查詢（假面騎士OOO、火野映司、安卡、核心硬幣、鴻上基金會），每組前 20 筆，轉址連結已還原成真實網址。安卡第 13、14 筆在原始清單中是同一個網址，尚待確認。`data/results/stage3-results.csv` 是這 5 組查詢的結果，每個來源取前 5 筆。
+
+**尚未解決：**
+
+- 被擋或需要登入的網站（百度百科、Facebook 等）會拿到 0 分，不代表內容差，應改標示為無法評分。
+- 所有查詢都用同一組關鍵字計分，查詢詞只影響候選網址，不影響分數。例如查「核心硬幣」「鴻上基金會」時，第 1 名都是角色列表（3325.55）。
+- 「安卡」的結果多半是埃及的生命之符，與 OOO 無關。
+- 鏡像網域（例如 `mzh.moegirl.org.cn`）仍會重複出現。
+- 還沒做人工評分，所以還算不出 NDCG@10，不能下結論說贏過 Google。
+
+新增測試：`search/SearchAggregatorTest`（2）、`search/DuckDuckGoProviderTest`（1）。

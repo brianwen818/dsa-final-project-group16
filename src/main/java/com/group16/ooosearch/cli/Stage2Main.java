@@ -2,17 +2,17 @@ package com.group16.ooosearch.cli;
 
 import com.group16.ooosearch.model.KeywordList;
 import com.group16.ooosearch.model.PageResult;
-import com.group16.ooosearch.tree.SiteCrawler;
+import com.group16.ooosearch.tree.RealSiteRanker;
+import com.group16.ooosearch.tree.SiteResult;
 import com.group16.ooosearch.tree.WebNode;
 import com.group16.ooosearch.tree.WebTree;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -36,10 +36,10 @@ public class Stage2Main {
         final WebTree tree;
         final double totalScore;
 
-        RankedTree(RootTarget target, WebTree tree) {
+        RankedTree(RootTarget target, SiteResult result) {
             this.target = target;
-            this.tree = tree;
-            this.totalScore = (tree != null && tree.getRoot() != null) ? tree.getRoot().getNodeScore() : 0.0;
+            this.tree = result.getTree();
+            this.totalScore = result.getTotalScore();
         }
     }
 
@@ -51,22 +51,25 @@ public class Stage2Main {
         List<RootTarget> targets = readRootTargets(urlsFile);
         System.out.println("關鍵字 " + keywords.size() + " 個（" + keywordsFile + "），根網址 " + targets.size() + " 個（" + urlsFile + "）");
 
-        SiteCrawler crawler = new SiteCrawler(2, 15); // 深度限制 2 層，每棵樹最多 15 個節點
-        List<RankedTree> rankedTrees = new ArrayList<>();
-        List<String> failures = new ArrayList<>();
-
+        Map<String, RootTarget> targetOf = new HashMap<>();
+        List<String> rootUrls = new ArrayList<>();
         for (RootTarget target : targets) {
-            System.out.println("開始爬取與建樹：" + target.label + " (" + target.url + ")");
-            try {
-                WebTree tree = crawler.crawl(target.url);
-                rankedTrees.add(new RankedTree(target, tree));
-            } catch (Exception e) {
-                failures.add(target.label + "：" + e.getMessage() + "（" + target.url + "）");
-            }
+            targetOf.put(target.url, target);
+            rootUrls.add(target.url);
         }
 
-        // 依據根節點的累積總分（NodeScore）由高到低排序
-        rankedTrees.sort((a, b) -> Double.compare(b.totalScore, a.totalScore));
+        // 深度限制 2 層，每棵樹最多 15 個節點；RealSiteRanker 會算出總分並由高到低排序
+        List<SiteResult> results = new RealSiteRanker(2, 15).rank(rootUrls, keywords);
+
+        List<RankedTree> rankedTrees = new ArrayList<>();
+        List<String> failures = new ArrayList<>();
+        for (SiteResult result : results) {
+            RootTarget target = targetOf.get(result.getRootUrl());
+            rankedTrees.add(new RankedTree(target, result));
+            if (result.getTree().getRoot().getPageResult() == null) {
+                failures.add(target.label + "（" + target.url + "）");
+            }
+        }
 
         printRankings(rankedTrees);
         printFailures(failures);
