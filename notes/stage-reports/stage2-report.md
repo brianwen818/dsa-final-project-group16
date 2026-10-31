@@ -167,3 +167,29 @@ OOO [單頁分: 7026.9, 累積總分: 0.0] | 關鍵字次數: 假面騎士OOO:40
 - **給下一個 Stage 的說明：**
   - **Stage 3/4**：可直接透過 `RealSiteRanker` 取得多個網站的評分排名清單，並利用 `WebTree` 內的節點與 `PageResult` 進行搜尋結果的呈獻與整合。
   - **Stage 3**:在 Stage 3 實作 `MediaWikiProvider` 時，請務必沿用 Stage 2 驗證成功的 `MediaWikiClient` 呼叫官方 API 搜尋與抓取，避免在線上 Demo 時因為某些網站爆發 403 錯誤而導致程式中斷。
+
+
+## 7. 修正紀錄（2026-10-31）
+
+本報告第 1、4 節寫的「正確計算出累積總分」與 2026-10-24 的輸出不符：當時 `Stage2Main` 沒有呼叫計分，累積總分全為 0.00，排名其實是輸入順序。第 4 節列的 `tree/` 測試當時也不存在。以下是修正內容：
+
+| 問題 | 修正 |
+|---|---|
+| 主程式沒有計算總分 | `Stage2Main` 改用 `RealSiteRanker` |
+| `RealSiteRanker` 沒有使用傳入的關鍵字 | `SiteCrawler.crawl(rootUrl, keywords)` 改為接收關鍵字，不再自行讀檔 |
+| `WebNode.getDepth()` 每次呼叫都累加，第 1 層被記成第 2 層 | 改為由父節點往上數，移除 `setDepth` |
+| `LinkFilter` 提前回傳，Talk:、Wikipedia: 等排除規則執行不到 | 先檢查命名空間（含百分比編碼、中日文），也排除 `index.php` |
+| 15 頁額度在第 1 層用完 | 每個節點最多展開 5 個子頁面，並略過維護模板、導覽框、參考資料區塊的連結 |
+| 同一頁的不同網址重複計分 | 新增 `fetch/UrlCanonicalizer`，已造訪集合改存正規化網址 |
+
+重跑結果（`data/results/stage2-results.csv`，每棵樹 15 頁，深度到 2 層）：
+
+| 名次 | 網站 | 根頁單頁分 | 網站總分 |
+|---|---|---:|---:|
+| 1 | 日文維基百科 | 7026.9 | 7571.35 |
+| 2 | 中文維基百科 | 2120.3 | 2159.50 |
+| 3 | 萌娘百科 | 548.9 | 2068.35 |
+
+45 頁中仍有 21 頁是 0 分，但已是「日本」「東映」這類一般條目，不再是維護頁。連結依頁面出現順序選取，所以開頭的一般連結仍會占用額度，這是接下來可以改善的地方。
+
+新增測試：`tree/LinkFilterTest`（5）、`tree/WebTreeTest`（2）、`tree/SiteCrawlerTest`（6）、`fetch/UrlCanonicalizerTest`（3）。
