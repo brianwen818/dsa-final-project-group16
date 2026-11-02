@@ -37,12 +37,12 @@
 			<version>${selenium.version}</version>
 		</dependency>
 
-		<!-- Stage 4 中文斷詞工具 -->
-		<dependency>
-			<groupId>com.huaban</groupId>
-			<artifactId>jieba-analysis</artifactId>
-			<version>1.0.2</version>
-		</dependency>
+		<!-- Stage 4 中文斷詞工具 (Huaban Jieba Analysis) -->
+        <dependency>
+            <groupId>com.huaban</groupId>
+            <artifactId>jieba-analysis</artifactId>
+            <version>1.0.2</version>
+        </dependency>
 
 		<!-- 格式化 JSON 工具 (GoogleScraper 匯出 json 使用) -->
 		<dependency>

@@ -1,29 +1,29 @@
 package com.group16.ooosearch.semantic;
 
+import com.group16.ooosearch.model.Keyword;
+import com.group16.ooosearch.model.KeywordList;
+import com.group16.ooosearch.model.WebPage;
+
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.group16.ooosearch.model.Keyword;
-import com.group16.ooosearch.model.KeywordList;
-import com.group16.ooosearch.model.WebPage;
-
 public class SemanticKeywordExpander implements KeywordExpander {
     private final TfIdfAnalyzer analyzer;
     private final double relevanceThreshold;
     private final int maxIterations;
     private int currentIteration = 0;
-
+    
     // 暫存最近一次擴充出來的新關鍵字（不含原關鍵字），方便 SearchResponse 拿取
     private List<Keyword> lastExpandedKeywords = new ArrayList<>();
 
     public SemanticKeywordExpander(Path stopwordsPath) {
         Tokenizer tokenizer = new Tokenizer(stopwordsPath);
         this.analyzer = new TfIdfAnalyzer(tokenizer);
-        this.relevanceThreshold = 5.0; // 相關度門檻
-        this.maxIterations = 1;       // 限制迭代 1 次，防範 Topic Drift
+        this.relevanceThreshold = 3.0; // 相關度門檻
+        this.maxIterations = 1; // 限制迭代 1 次，防止 Topic Drift
     }
 
     @Override
@@ -43,19 +43,16 @@ public class SemanticKeywordExpander implements KeywordExpander {
 
         // 提取 Top-5 候選擴充詞
         List<TfIdfAnalyzer.CandidateWord> candidates = analyzer.extractTopK(pages, knownForms, 5);
-        
-        // 建立新的 KeywordList，先把原有的放進去
         KeywordList expandedList = new KeywordList(originalList);
 
         // 篩選並加入符合門檻的新擴充詞（賦予權重 2.0）
         for (TfIdfAnalyzer.CandidateWord candidate : candidates) {
             String word = candidate.getWord();
             if (candidate.getScore() >= relevanceThreshold && !knownForms.contains(word)) {
-                // 新增擴充關鍵字，無額外 alias
                 Keyword newKw = new Keyword(word, 2.0, List.of());
                 expandedList.add(newKw);
                 lastExpandedKeywords.add(newKw); // 收集純新擴充詞
-                knownForms.add(word); // 避免同一次擴充重複加入
+                knownForms.add(word);
             }
         }
 
