@@ -24,6 +24,8 @@ import com.group16.ooosearch.search.CandidateFinder;
 import com.group16.ooosearch.search.DuckDuckGoProvider;
 import com.group16.ooosearch.search.MediaWikiProvider;
 import com.group16.ooosearch.search.QueryScope;
+import com.group16.ooosearch.search.QueryTranslator;
+import com.group16.ooosearch.search.WikidataTranslator;
 import com.group16.ooosearch.search.SearchProvider;
 import com.group16.ooosearch.semantic.SemanticKeywordExpander;
 import com.group16.ooosearch.snippet.ImageFinder;
@@ -73,11 +75,20 @@ public class RealSearchEngine implements SearchEngine {
     private final Path synonymsFile;
     private final SemanticKeywordExpander expander;
     private final ImageFinder imageFinder;
+    private final QueryTranslator translator;
     private Consumer<String> progress = message -> { };
     private List<ExpansionRound> lastRounds = List.of();
 
     public RealSearchEngine(PageFetcher fetcher, SearchProvider google, List<SearchProvider> scopedProviders,
                             KeywordList keywords, Path synonymsFile, SemanticKeywordExpander expander) {
+        this(fetcher, google, scopedProviders, keywords, synonymsFile, expander, QueryTranslator.NONE);
+    }
+
+    /** translator：關鍵字表與同義詞表都查不到查詢詞時，用來把外語查詢翻成中日文。 */
+    public RealSearchEngine(PageFetcher fetcher, SearchProvider google, List<SearchProvider> scopedProviders,
+                            KeywordList keywords, Path synonymsFile, SemanticKeywordExpander expander,
+                            QueryTranslator translator) {
+        this.translator = translator;
         this.fetcher = fetcher;
         this.finder = new CandidateFinder(google, scopedProviders);
         this.baseKeywords = keywords;
@@ -93,7 +104,8 @@ public class RealSearchEngine implements SearchEngine {
         return new RealSearchEngine(fetcher, new CachedGoogleProvider(),
                 List.of(new MediaWikiProvider(fetcher), new DuckDuckGoProvider(fetcher)),
                 keywords, QUERY_SYNONYMS_FILE,
-                new SemanticKeywordExpander(STOPWORDS_FILE, EXPANSION_EXCLUDES_FILE, keywords));
+                new SemanticKeywordExpander(STOPWORDS_FILE, EXPANSION_EXCLUDES_FILE, keywords),
+                new WikidataTranslator(fetcher));
     }
 
     /** 設定進度訊息的輸出（例如 System.out::println）；預設不輸出。 */
@@ -118,8 +130,9 @@ public class RealSearchEngine implements SearchEngine {
 
     private SearchResponse run(String query) throws IOException {
         Keyword topic = QueryScope.findTopic(baseKeywords);
-        Keyword queryKeyword = QueryScope.queryKeyword(query, synonymsFile, baseKeywords);
-        List<Keyword> exclusions = QueryScope.queryExclusions(query, synonymsFile);
+        List<String> translations = translate(query);
+        Keyword queryKeyword = QueryScope.queryKeyword(query, translations, synonymsFile, baseKeywords);
+        List<Keyword> exclusions = QueryScope.queryExclusions(query, translations, synonymsFile);
         PassageRanker passageRanker = new PassageRanker(queryKeyword, exclusions, topic);
 
         // 1. 候選網址
@@ -188,6 +201,26 @@ public class RealSearchEngine implements SearchEngine {
         }
         progress.accept("完成：" + results.size() + " 個網站，擴充詞 " + names(expanded));
         return new SearchResponse(query, keywords, results, expanded, passages);
+    }
+
+    /**
+     * 關鍵字表與同義詞表都查不到查詢詞時（沒有其他寫法），才用 translator 翻譯。
+     * 翻譯失敗（例如沒有網路）不中斷搜尋，只用原查詢。
+     */
+    private List<String> translate(String query) throws IOException {
+        if (!QueryScope.queryKeyword(query, synonymsFile, baseKeywords).getAliases().isEmpty()) {
+            return List.of();
+        }
+        try {
+            List<String> translations = translator.translate(query);
+            if (!translations.isEmpty()) {
+                progress.accept("翻譯：" + query + " → " + translations);
+            }
+            return translations;
+        } catch (IOException | RuntimeException e) {
+            progress.accept("翻譯失敗，改用原查詢：" + e.getMessage());
+            return List.of();
+        }
     }
 
     private List<SiteResult> rank(Set<String> urls, KeywordList keywords, Keyword queryKeyword, List<Keyword> exclusions) {

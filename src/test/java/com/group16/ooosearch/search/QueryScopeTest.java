@@ -65,4 +65,30 @@ class QueryScopeTest {
         Keyword ending = new Keyword("ooo 結局", 1);
         assertEquals(List.of("ooo 結局"), QueryScope.scopedQueries(ending, topic, 2));
     }
+
+    @Test
+    void foreignQueryIsSearchedByItsChineseOrJapaneseFormsFirst() {
+        Keyword chat = new Keyword("chat", 1, List.of("cat", "貓", "ネコ"));
+        assertEquals(List.of("貓 假面騎士OOO", "ネコ 假面騎士OOO"), QueryScope.scopedQueries(chat, topic, 2));
+    }
+
+    @Test
+    void translationsPullInSynonymLinesAndExclusions(@TempDir Path dir) throws IOException {
+        Path file = dir.resolve("query-synonyms.txt");
+        Files.writeString(file, "貓咪 | 貓, 猫 | !熊貓, !貓頭鷹\n", StandardCharsets.UTF_8);
+
+        // 法文 chat 翻成「貓」「ネコ」後，「貓」對到同義詞表「貓咪」那一行
+        assertEquals(List.of("chat", "貓", "ネコ", "貓咪", "猫"),
+                QueryScope.queryKeyword("chat", List.of("貓", "ネコ"), file, new KeywordList()).getForms());
+        assertEquals(List.of("熊貓", "貓頭鷹"),
+                QueryScope.queryExclusions("chat", List.of("貓", "ネコ"), file).stream().map(Keyword::getName).toList());
+    }
+
+    @Test
+    void translationsPullInOooKeywordForms() throws IOException {
+        KeywordList keywords = new KeywordList(List.of(new Keyword("核心硬幣", 4.5, List.of("コアメダル"))));
+        assertEquals(List.of("Médaille", "核心硬幣", "コアメダル"),
+                QueryScope.queryKeyword("Médaille", List.of("核心硬幣"), Path.of("no-such-file.txt"), keywords)
+                        .getForms());
+    }
 }

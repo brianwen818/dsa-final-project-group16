@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8"><title>Search Flow</title>
+<style>
+  :root { --ink:#1f2328; --sub:#4b5260; --code:#1f5fd6; --line:#c9ccd6; --blue:#2f6fe4; --green:#1a9b5a; }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { width: 960px; height: 1190px; background: #fff; }
+  body { font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif; color: var(--ink); padding: 26px 28px 0 20px; position: relative; }
+  h1 { font-size: 27px; font-weight: 700; margin: 0 0 14px 6px; }
+  .row { display: flex; align-items: center; margin-bottom: 10px; position: relative; }
+  .row:not(.last)::after { content: ""; position: absolute; left: calc(120px + (100% - 295px) / 2 - 6px); bottom: -10px;
+    border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 8px solid #9aa0ab; }
+  .label { width: 120px; flex: none; text-align: right; padding-right: 16px; font-size: 17px; color: #6a7080; line-height: 1.3; }
+  .box { width: calc(100% - 295px); flex: none; border: 2px solid var(--line); border-radius: 10px; padding: 9px 18px 10px; background: #fff; }
+  .box.todo { border-style: dashed; }
+  .box.new { border-color: #c77d12; background: #fff7e8; }
+  .box.snip { border-color: var(--green); background: #eafaf1; }
+  .box.loop { border-color: var(--blue); background: #eef4ff; }
+  .t { font-size: 20px; font-weight: 700; margin-bottom: 5px; }
+  .d { font-size: 16px; color: var(--sub); line-height: 1.5; margin-bottom: 5px; }
+  .c { font-family: Consolas, "Cascadia Mono", monospace; font-size: 15px; color: var(--code); }
+  #note { position: absolute; width: 140px; font-size: 14.5px; line-height: 1.45; color: var(--blue); }
+  svg { position: absolute; left: 0; top: 0; pointer-events: none; }
+  .legend { position: absolute; left: 26px; bottom: 10px; font-size: 15px; color: #4b5260; display: flex; gap: 16px; align-items: center; }
+  .sw { display: inline-block; width: 26px; height: 16px; border: 2px solid var(--line); border-radius: 4px; vertical-align: -3px; margin-right: 5px; }
+</style></head>
+<body>
+<h1>一次搜尋的流程（RealSearchEngine）</h1>
+
+<div class="row"><div class="label">Stage 5</div><div class="box todo">
+  <div class="t">使用者輸入任何關鍵字</div>
+  <div class="d">例如「貓咪」或法文「chat」（網站為計畫；目前由命令列 SearchMain 呼叫）</div>
+  <div class="c">web：SearchController → SearchService → SearchEngine</div></div></div>
+
+<div class="row"><div class="label">外語查詢<br>（2.7 節）</div><div class="box new">
+  <div class="t">查不到的外語詞先翻成中日文</div>
+  <div class="d">關鍵字表與同義詞表都沒有時，用 Wikidata 翻譯；不需指定輸入語言</div>
+  <div class="c">search：QueryTranslator、WikidataTranslator</div></div></div>
+
+<div class="row" id="scope"><div class="label">Stage 3</div><div class="box">
+  <div class="t">限定在 OOO 範圍內，找候選網址</div>
+  <div class="d">查詢加上「假面騎士OOO」；Google 快取、維基、DuckDuckGo 合併去重</div>
+  <div class="c">search：QueryScope、CandidateFinder、SearchAggregator</div></div></div>
+
+<div class="row"><div class="label">Stage 2</div><div class="box">
+  <div class="t">爬子頁面建樹</div>
+  <div class="d">BFS，每棵樹最多 15 頁、2 層；後序走訪加總 Site(r)</div>
+  <div class="c">tree：SiteCrawler、WebTree、RealSiteRanker</div></div></div>
+
+<div class="row"><div class="label">Stage 1、3</div><div class="box">
+  <div class="t">每頁計分：OOO 分數 × 查詢詞相關度</div>
+  <div class="d">S_q(p) = S(p) × (0.1 + ln(1 + q(p)))</div>
+  <div class="c">scoring：KeywordPageScorer、QueryAwarePageScorer、WordCounter</div></div></div>
+
+<div class="row"><div class="label">說明為<br>什麼相關</div><div class="box snip">
+  <div class="t">挑出每個網站的相關段落</div>
+  <div class="d">Stack 記錄章節路徑，PriorityQueue 取前 3 段，附標籤與圖片</div>
+  <div class="c">snippet：PassageExtractor、PassageRanker、ImageFinder</div></div></div>
+
+<div class="row" id="expand"><div class="label">Stage 4</div><div class="box loop">
+  <div class="t">從相關段落找擴充詞</div>
+  <div class="d">jieba 斷詞、共現圖、TF-IDF，PriorityQueue 取前 5 個</div>
+  <div class="c">semantic：SemanticKeywordExpander、TfIdfAnalyzer、Tokenizer</div></div></div>
+
+<div class="row"><div class="label">Stage 5</div><div class="box">
+  <div class="t">回傳結果頁</div>
+  <div class="d">排名、分數、網站樹、相關段落、標籤、圖片、擴充詞</div>
+  <div class="c">engine：SearchResponse</div></div></div>
+
+<div class="row last"><div class="label">Stage 6</div><div class="box todo">
+  <div class="t">離線評估：與 LLM 比較</div>
+  <div class="d">把相關段落與來源放進 prompt，和直接提問對照（計畫）</div>
+  <div class="c">llm：PromptBuilder</div></div></div>
+
+<div id="note">前 2 個擴充詞加上「假面騎士OOO」再搜尋，以「OOO 關鍵字 + 擴充詞」重新排名，最多 2 輪</div>
+
+<div class="legend">外框：
+  <span><span class="sw" style="border-color:#c77d12;background:#fff7e8"></span>外語查詢</span>
+  <span><span class="sw" style="border-color:#2f6fe4;background:#eef4ff"></span>擴充迴圈</span>
+  <span><span class="sw" style="border-color:#1a9b5a;background:#eafaf1"></span>段落摘要</span>
+  <span><span class="sw" style="border-style:dashed"></span>尚未實作</span>
+</div>
+
+<svg id="svg" width="960" height="1190"></svg>
+<script>
+  const box = id => document.querySelector('#' + id + ' .box').getBoundingClientRect();
+  const s = box('scope'), e = box('expand');
+  const x = s.right + 20, y1 = s.top + s.height / 2, y2 = e.top + e.height / 2;
+  const svg = document.getElementById('svg');
+  svg.innerHTML = `<path d="M ${e.right + 2} ${y2} H ${x - 8} Q ${x} ${y2} ${x} ${y2 - 8} V ${y1 + 8} Q ${x} ${y1} ${x - 8} ${y1} H ${s.right + 12}"
+      fill="none" stroke="#2f6fe4" stroke-width="3"/>
+    <polygon points="${s.right + 2},${y1} ${s.right + 14},${y1 - 7} ${s.right + 14},${y1 + 7}" fill="#2f6fe4"/>`;
+  const note = document.getElementById('note');
+  note.style.top = ((y1 + y2) / 2 - note.offsetHeight / 2) + 'px';
+  note.style.left = (x + 10) + 'px';
+</script>
+</body></html>

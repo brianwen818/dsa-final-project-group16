@@ -41,24 +41,46 @@ public final class QueryScope {
      * （「核心硬币」「コアメダル」），否則簡體或日文網頁會被當成沒提到查詢詞。
      */
     public static Keyword queryKeyword(String query, Path synonymsFile, KeywordList keywords) throws IOException {
+        return queryKeyword(query, List.of(), synonymsFile, keywords);
+    }
+
+    /**
+     * 同上，再加上翻譯結果（{@link QueryTranslator}，例如法文「chat」→「貓」「ネコ」）。
+     * 名稱仍是原查詢；別名依序為翻譯結果，以及原查詢與每個翻譯在關鍵字表、同義詞表中的其他寫法
+     * （「chat」→「貓」→ 同義詞表「貓咪」那一行）。
+     */
+    public static Keyword queryKeyword(String query, List<String> translations, Path synonymsFile,
+                                       KeywordList keywords) throws IOException {
         String q = query.strip();
-        Set<String> aliases = new LinkedHashSet<>();
-        for (Keyword keyword : keywords) {
-            if (keyword.getWeight() > 0 && keyword.getForms().stream().anyMatch(f -> f.equalsIgnoreCase(q))) {
-                keyword.getForms().stream().filter(f -> !f.equalsIgnoreCase(q)).forEach(aliases::add);
+        List<String> terms = terms(q, translations);
+        Set<String> aliases = new LinkedHashSet<>(terms.subList(1, terms.size()));
+        for (String term : terms) {
+            for (Keyword keyword : keywords) {
+                if (keyword.getWeight() > 0 && keyword.getForms().stream().anyMatch(f -> f.equalsIgnoreCase(term))) {
+                    aliases.addAll(keyword.getForms());
+                }
+            }
+            for (List<String> line : matchingLines(term, synonymsFile)) {
+                line.stream().filter(f -> !isExclusion(f)).forEach(aliases::add);
             }
         }
-        for (List<String> line : matchingLines(q, synonymsFile)) {
-            line.stream().filter(f -> !isExclusion(f) && !f.equalsIgnoreCase(q)).forEach(aliases::add);
-        }
+        aliases.removeIf(f -> f.equalsIgnoreCase(q));
         return new Keyword(q, 1.0, new ArrayList<>(aliases));
     }
 
     /** 查詢詞自己的排除詞（同義詞表中以 ! 開頭的寫法），權重為 0。 */
     public static List<Keyword> queryExclusions(String query, Path synonymsFile) throws IOException {
+        return queryExclusions(query, List.of(), synonymsFile);
+    }
+
+    /** 同上，原查詢與每個翻譯結果的排除詞合併（「chat」翻成「貓」後，也排除「熊貓」）。 */
+    public static List<Keyword> queryExclusions(String query, List<String> translations, Path synonymsFile)
+            throws IOException {
         Set<String> names = new LinkedHashSet<>();
-        for (List<String> line : matchingLines(query.strip(), synonymsFile)) {
-            line.stream().filter(QueryScope::isExclusion).map(f -> f.substring(1).strip()).forEach(names::add);
+        for (String term : terms(query.strip(), translations)) {
+            for (List<String> line : matchingLines(term, synonymsFile)) {
+                line.stream().filter(QueryScope::isExclusion).map(f -> f.substring(1).strip()).forEach(names::add);
+            }
         }
         List<Keyword> result = new ArrayList<>();
         for (String name : names) {
@@ -75,7 +97,7 @@ public final class QueryScope {
      */
     public static List<String> scopedQueries(Keyword query, Keyword topic, int maxVariants) {
         Set<String> result = new LinkedHashSet<>();
-        for (String form : query.getForms()) {
+        for (String form : searchOrder(query)) {
             if (result.size() >= maxVariants) {
                 break;
             }
@@ -108,6 +130,34 @@ public final class QueryScope {
             }
         }
         return keywords.get(0);
+    }
+
+    /**
+     * 拿去搜尋的寫法順序：查詢本身不含漢字或假名時（例如「chat」「cat」），含漢字或假名的寫法排前面，
+     * 因為搜尋來源（中文維基等）以中日文為主；其餘維持原順序。
+     */
+    private static List<String> searchOrder(Keyword query) {
+        List<String> forms = query.getForms();
+        if (WikidataTranslator.containsCjk(query.getName())) {
+            return forms;
+        }
+        List<String> ordered = new ArrayList<>();
+        forms.stream().filter(WikidataTranslator::containsCjk).forEach(ordered::add);
+        forms.stream().filter(f -> !WikidataTranslator.containsCjk(f)).forEach(ordered::add);
+        return ordered;
+    }
+
+    /** 原查詢加上翻譯結果（去除空白與重複，原查詢在第一個）。 */
+    private static List<String> terms(String query, List<String> translations) {
+        Set<String> terms = new LinkedHashSet<>();
+        terms.add(query);
+        for (String t : translations) {
+            String s = t.strip();
+            if (!s.isEmpty() && !s.equalsIgnoreCase(query)) {
+                terms.add(s);
+            }
+        }
+        return new ArrayList<>(terms);
     }
 
     private static boolean isExclusion(String form) {

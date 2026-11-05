@@ -14,6 +14,8 @@
 - [ ] `SearchAggregator.java`：呼叫所有 Provider，用 `LinkedHashSet` 合併並去除重複
 - [ ] `GoogleResultCollector.java`：**離線執行**的 Selenium 程式，抓 Google 前 20～30 筆並存成 json
 
+- [x] `QueryTranslator.java`、`WikidataTranslator.java`：外語查詢（法文 chat、韓文 고양이…）先用 Wikidata 翻成中日文寫法再搜尋；不需指定輸入語言，依文字系統決定要查的語言（2026-11-05）
+
 ## 其他工作
 
 - [ ] 挑選 5～10 組關鍵字，執行 `GoogleResultCollector` 取得對照組

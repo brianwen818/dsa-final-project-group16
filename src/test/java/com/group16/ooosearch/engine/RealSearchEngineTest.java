@@ -20,6 +20,7 @@ import com.group16.ooosearch.fetch.PageFetcher;
 import com.group16.ooosearch.model.Keyword;
 import com.group16.ooosearch.model.KeywordList;
 import com.group16.ooosearch.model.Passage;
+import com.group16.ooosearch.search.QueryTranslator;
 import com.group16.ooosearch.search.SearchProvider;
 import com.group16.ooosearch.semantic.SemanticKeywordExpander;
 import com.group16.ooosearch.tree.SiteResult;
@@ -83,6 +84,35 @@ class RealSearchEngineTest {
         // 送給外部來源的查詢都加上了主題名稱
         assertTrue(scopedQueries.contains("貓咪 假面騎士OOO"));
         assertTrue(engine.getLastRounds().size() <= SemanticKeywordExpander.MAX_ITERATIONS);
+    }
+
+    @Test
+    void foreignQueryIsTranslatedBeforeSearching() {
+        List<String> translated = new ArrayList<>();
+        QueryTranslator translator = q -> {
+            translated.add(q);
+            return q.equals("chat") ? List.of("貓") : List.of();
+        };
+        RealSearchEngine withTranslator = new RealSearchEngine(new PageFetcher(cache, 0, 200),
+                (q, limit) -> List.of(SITE + "pets"),
+                List.of((q, limit) -> {
+                    scopedQueries.add(q);
+                    return List.of(SITE + "ooo", SITE + "plain");
+                }),
+                keywords, dir.resolve("query-synonyms.txt"),
+                new SemanticKeywordExpander(Path.of("data", "stopwords.txt"), null, keywords), translator);
+
+        SearchResponse response = withTranslator.search("chat");
+
+        assertEquals(List.of("chat"), translated);
+        assertEquals(SITE + "ooo", response.getResults().get(0).getRootUrl());
+        assertTrue(response.getPassages(SITE + "ooo").stream().allMatch(p -> p.text().contains("貓")));
+        assertTrue(scopedQueries.contains("貓 假面騎士OOO"));
+        assertFalse(scopedQueries.contains("chat 假面騎士OOO"));
+
+        // 同義詞表已經查得到的查詢（貓咪）不必翻譯
+        withTranslator.search("貓咪");
+        assertEquals(List.of("chat"), translated);
     }
 
     @Test
