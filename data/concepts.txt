@@ -19,6 +19,12 @@ Yummy | ヤミー | ja 5；台版內文用 Yummy（28 次）
 慾望 | 欲望 | zh 8；作品主題
 OOO驅動器 | オーズドライバー, OOO Driver, OOO驱动器 | ja 26；zh 20
 TaToBa COMBO | タトバコンボ, 鷹虎蝗, 塔托巴組合, 塔托巴组合 | ja 24；zh 47
+鍬螳蝗組合 | 鍬螳蝗, 昆蟲系聯組, ガタキリバ, Gatakiriba Combo, Gatakiriba | 台版維基型態表（GataKiriBa COMBO 鍬螳蝗 昆蟲系聯組）；2026-11-05 為段落標籤與圖片加入
+獅虎豹組合 | 獅虎豹, 貓系聯組, ラトラーター, Latorartar Combo, Latorartar, Latoratah | 台版維基型態表（LaTorarTar COMBO 獅虎豹 貓系聯組）；2026-11-05 加入
+犀猩象組合 | 犀猩象, 重力系聯組, サゴーゾ, Sagozo Combo, Sagozo | 台版維基型態表（SaGouZo COMBO 犀猩象 重力系聯組）；2026-11-05 加入
+鷹雀鷲組合 | 鷹雀鷲, 飛鳥系聯組, タジャドル, Tajadol Combo, Tajadol | 台版維基型態表（TaJaDol COMBO 鷹雀鷲 飛鳥系聯組）；2026-11-05 加入
+鯨鰻章組合 | 鯨鰻章, 水棲系聯組, シャウタ, Shauta Combo, Shauta | 台版維基型態表（ShaUTa COMBO 鯨鰻章 水棲系聯組）；2026-11-05 加入
+翼角暴組合 | 翼角暴, 恐龍系聯組, プトティラ, Putotyra Combo, Putotyra | 台版維基型態表（PuToTyra COMBO 翼角暴 恐龍系聯組）；2026-11-05 加入
 
 # 角色
 安酷 | 安卡, アンク, Ankh | ja 4；zh 19；台版維基譯作安酷，安卡為常見譯名

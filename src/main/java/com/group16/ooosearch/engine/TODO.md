@@ -7,4 +7,5 @@
 ## 要建立的檔案
 
 - [x] `SearchEngine.java`、`SearchResponse.java`：介面與結果類別，假實作為 `FakeSearchEngine`（Stage 0 完成，Stage 5 可以先用它開發前端）
-- [ ] `SearchEngine` 的正式實作：搜尋 → 建樹排名 → 關鍵字擴充 → 再搜尋
+- [x] `SearchEngine` 的正式實作：`RealSearchEngine`（搜尋 → 建樹排名 → 段落 → 關鍵字擴充 → 再搜尋，最多 2 輪 → 段落與圖片；2026-11-05）
+- [x] `SearchResponse` 加上每個網站的段落摘要：`getPassages(rootUrl)`（2026-11-05；舊建構子保留，`FakeSearchEngine` 附示範段落）

@@ -190,3 +190,19 @@ Failed to crawl: [https://baike.baidu.com/item/%E5%81%87%E9%9D%A2%E9%AA%91%E5%A3
 - 還沒做人工評分，所以還算不出 NDCG@10，不能下結論說贏過 Google。
 
 新增測試：`search/SearchAggregatorTest`（2）、`search/DuckDuckGoProviderTest`（1）。
+
+## 8. 修正紀錄（2026-11-05）：任何查詢都限定在 OOO 範圍內
+
+目標改為「無論使用者輸入什麼關鍵字，都跳出和該關鍵字以及假面騎士OOO最相關的內容」。原本查「貓咪」只會找到一般講貓的網頁，而且查詢詞不影響分數。
+
+| 問題 | 修正 |
+|---|---|
+| 查詢詞和 OOO 無關時，搜尋來源只回傳一般內容 | `search/QueryScope`：送給維基與 DuckDuckGo 的查詢加上「假面騎士OOO」（已提到 OOO 時不加）；Google 快取仍用原始查詢，因為它是對照組。候選網址的合併搬到 `search/CandidateFinder` |
+| 網頁多寫「貓」而不是「貓咪」 | 新增 `data/query-synonyms.txt`（例如「貓咪 \| 貓, 猫, ネコ, cat \| !熊貓, !貓頭鷹, !貓熊」），每個查詢取前 2 種寫法搜尋；查詢剛好是 OOO 關鍵字時沿用關鍵字表的寫法（查「核心硬幣」也算「核心硬币」「コアメダル」） |
+| 查詢詞不影響分數 | `scoring/QueryAwarePageScorer`：`S_q(p) = S(p) × (0.1 + ln(1 + q(p)))`。沒提到 OOO 的頁面為 0，沒提到查詢詞的 OOO 頁面保留 10%（不設 0，爬蟲才會展開子頁面）。查詢詞次數由 `scoring/QueryCounter` 計算，會略過排除詞 |
+| 「熊貓」「貓頭鷹」被算成「貓」 | 同義詞表以 `!` 標示查詢詞的排除詞 |
+| 維基重新導向造成同一頁出現兩次 | `tree/SiteResults.dropRedirectDuplicates`：同一網站、首頁標題相同只留一個 |
+
+重跑結果：查「貓咪」時前幾名是 OOO 主條目、角色列表與萌娘百科，內容包括獅虎豹貓系聯組、貓系幹部卡佳里、第 3 集與第 13 集的貓 Yummy；查「核心硬幣」時第 1 名從角色列表換成專講核心硬幣的 Kamen Rider Wiki「O Medals」。`data/results/stage3-results.csv` 已用新的計分方式重跑 6 組查詢（原本 5 組加上「貓咪」），新增「查詢詞次數」欄位。新增測試：`QueryScopeTest`、`QueryAwarePageScorerTest`、`QueryCounterTest`。
+
+完整流程（Stage 4 擴充、段落摘要與圖片）由 `engine/RealSearchEngine` 串起來，見 Stage 4 報告第 7 節與 Proposal 2.4、2.5 節。

@@ -7,6 +7,7 @@ import com.group16.ooosearch.fetch.UrlCanonicalizer;
 import com.group16.ooosearch.model.KeywordList;
 import com.group16.ooosearch.model.WebPage;
 import com.group16.ooosearch.scoring.KeywordPageScorer;
+import com.group16.ooosearch.scoring.PageScorer;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -21,11 +22,11 @@ public class SiteCrawler {
     /** 每個節點最多展開幾個子頁面，避免額度在第 1 層就用完，讓樹能長到更深。 */
     private static final int DEFAULT_MAX_CHILDREN_PER_NODE = 5;
     /** 維護模板、導覽框、編輯連結、參考資料等區塊的連結不算正文連結。 */
-    private static final String NON_CONTENT_BLOCKS =
+    public static final String NON_CONTENT_BLOCKS =
             "nav, header, footer, aside, .ambox, .navbox, .metadata, .hatnote, .catlinks, "
             + ".mw-editsection, .reference, .references, .reflist";
 
-    private final KeywordPageScorer scorer;
+    private final PageScorer scorer;
     private final int maxDepth;
     private final int maxPagesPerTree;
     private final int maxChildrenPerNode;
@@ -35,8 +36,18 @@ public class SiteCrawler {
         this(maxDepth, maxPagesPerTree, DEFAULT_MAX_CHILDREN_PER_NODE, new PageFetcher(new PageCache()));
     }
 
+    /** 指定單頁計分方式，例如 QueryAwarePageScorer（同時考慮查詢詞）。 */
+    public SiteCrawler(int maxDepth, int maxPagesPerTree, PageScorer scorer) {
+        this(maxDepth, maxPagesPerTree, DEFAULT_MAX_CHILDREN_PER_NODE, new PageFetcher(new PageCache()), scorer);
+    }
+
     public SiteCrawler(int maxDepth, int maxPagesPerTree, int maxChildrenPerNode, PageFetcher pageFetcher) {
-        this.scorer = new KeywordPageScorer();
+        this(maxDepth, maxPagesPerTree, maxChildrenPerNode, pageFetcher, new KeywordPageScorer());
+    }
+
+    public SiteCrawler(int maxDepth, int maxPagesPerTree, int maxChildrenPerNode, PageFetcher pageFetcher,
+                       PageScorer scorer) {
+        this.scorer = scorer;
         this.maxDepth = maxDepth;
         this.maxPagesPerTree = maxPagesPerTree;
         this.maxChildrenPerNode = maxChildrenPerNode;

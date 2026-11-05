@@ -7,7 +7,7 @@
 
 ## 要建立的檔案
 
-- [ ] `PromptBuilder.java`：把排名前幾的網頁摘要與分數組成 prompt（RAG 的概念）
+- [ ] `PromptBuilder.java`：把 `snippet/` 挑出的相關段落連同來源網址組成 prompt（RAG 的概念）
 
 ## 其他工作
 

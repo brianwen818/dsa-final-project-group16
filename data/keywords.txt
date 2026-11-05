@@ -1,4 +1,4 @@
-# 關鍵字表：由 cli/KeywordSeedAnalyzer 依 data/concepts.txt 於 2026-10-20 自動產生，請勿手動修改
+# 關鍵字表：由 cli/KeywordSeedAnalyzer 依 data/concepts.txt 於 2026-11-05 自動產生，請勿手動修改
 # 要增減關鍵字或寫法，請修改 data/concepts.txt 後重新執行；權重計算明細見 data/keyword-candidates/concept-weights.md
 # 格式：權重 | 關鍵字 | 其他寫法（以逗號分隔）；權重 0 為排除詞
 5.0 | 假面騎士OOO | 仮面ライダーオーズ, オーズ, OOO, Kamen Rider OOO, 幪面超人OOO, 假面骑士OOO
@@ -16,9 +16,15 @@
 3.3 | 佳美爾 | ガメル, Gamel
 3.3 | 鴻上基金會 | 鴻上ファウンデーション, Kougami Foundation, 鸿上基金会
 3.1 | OOO驅動器 | オーズドライバー, OOO Driver, OOO驱动器
+3.1 | 翼角暴組合 | 翼角暴, 恐龍系聯組, プトティラ, Putotyra Combo, Putotyra
 3.1 | 伊達明 | 伊达明, Akira Date
 3.1 | 多國料理店 | クスクシエ, Cous Coussier, Couscoussier
+3.0 | 鷹雀鷲組合 | 鷹雀鷲, 飛鳥系聯組, タジャドル, Tajadol Combo, Tajadol
 2.9 | TaToBa COMBO | タトバコンボ, 鷹虎蝗, 塔托巴組合, 塔托巴组合
+2.9 | 鍬螳蝗組合 | 鍬螳蝗, 昆蟲系聯組, ガタキリバ, Gatakiriba Combo, Gatakiriba
+2.9 | 獅虎豹組合 | 獅虎豹, 貓系聯組, ラトラーター, Latorartar Combo, Latorartar, Latoratah
+2.8 | 犀猩象組合 | 犀猩象, 重力系聯組, サゴーゾ, Sagozo Combo, Sagozo
+2.8 | 鯨鰻章組合 | 鯨鰻章, 水棲系聯組, シャウタ, Shauta Combo, Shauta
 2.8 | 鴻上光生 | 鸿上光生, Kousei Kougami
 2.8 | 真木清人 | Kiyoto Maki
 2.7 | 後藤慎太郎 | 后藤慎太郎, Shintaro Gotou, Shintaro Goto

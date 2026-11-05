@@ -33,11 +33,11 @@
 
 ### 本組主題：假面騎士OOO
 
-使用者輸入與「假面騎士OOO」相關的關鍵字，系統會：
+**目標：無論使用者輸入什麼關鍵字，都跳出和「該關鍵字」以及「假面騎士OOO」最相關的內容。** 例如搜尋「貓咪」時，Google 給的是一般的貓咪資訊；我們要給的是 OOO 裡和貓有關的內容（貓系核心硬幣組成的獅虎豹組合、貓系幹部卡佳里）。系統會：
 
-1. 從網路上找出候選網站
-2. 爬取網站及其子頁面，依關鍵字出現情形計分
-3. 重新排名，比 Google 的原始排名更貼近「資料完整度」
+1. 在查詢後面加上「假面騎士OOO」，從網路上找出候選網站
+2. 爬取網站及其子頁面計分：分數 = OOO 關鍵字分數 × 查詢詞相關度，兩者缺一不可
+3. 重新排名，比 Google 的原始排名更貼近「資料完整度」，並說明**為什麼相關**：附上網頁中同時提到查詢詞與 OOO 的段落、這段在講誰（例如「卡佳里」）與圖片（見 [4.5](#45-stage-590上線)）
 4. 自動擴充相關關鍵字（如「塔托巴組合」、「鴻上集團」）再次搜尋
 5. 以網站形式公開提供服務，並與 ChatGPT、Gemini、DeepSeek 等 LLM 的回答比較
 
@@ -268,9 +268,14 @@
 |---|---|
 | **負責人** | 劉又綺、鄭年芮（`SearchProvider` 介面已在 Stage 0 定好） |
 | **期限** | 11/01 |
-| **輸入** | 只有關鍵字，例如「假面騎士OOO」、「火野映司」、「安卡」 |
+| **輸入** | 任何關鍵字，例如「假面騎士OOO」、「火野映司」、「安卡」，也包括「貓咪」這類和 OOO 沒有直接關係的詞 |
 | **輸出** | 用 Stage 2 演算法重新排名的網站清單，並與 Google 原始排名比較 |
 | **主要 package** | `search/`、`cli/Stage3Main` |
+
+> **2026-11-05 更新：查詢限定與查詢詞計分。** 為了讓任何查詢都回傳和 OOO 相關的內容：
+> - `search/QueryScope`：送給維基與 DuckDuckGo 的查詢會加上「假面騎士OOO」（查詢已提到 OOO 時不加）；查詢詞的其他寫法來自 `data/query-synonyms.txt`（例如「貓咪｜貓、猫、ネコ」），每個查詢取前 2 種寫法搜尋。Google 快取仍用原始查詢，因為它是對照組。
+> - `scoring/QueryAwarePageScorer`：單頁分數 `S_q(p) = S(p) × (0.1 + ln(1 + q(p)))`，S 是 OOO 分數，q 是查詢詞次數。沒提到 OOO 的頁面為 0；沒提到查詢詞的 OOO 頁面只保留 10%（不設 0，爬蟲才會展開它的子頁面）。
+> - 執行：`./mvnw compile exec:java -Dexec.mainClass=com.group16.ooosearch.cli.Stage3Main -Dexec.args="貓咪"`
 
 **做法：分成「離線」與「線上」兩部分**
 
@@ -350,6 +355,8 @@ public interface SearchProvider {
 
 **避免偏題：** 例如「假面騎士W」常和 OOO 一起出現在劇場版中，可能把結果帶往別的作品。要設定相關度門檻，並限制迭代次數。
 
+**2026-11-05 修正（已實作）：** 擴充改從段落摘要（見 4.5）挑出的段落找詞；關鍵字表所有寫法加入 jieba 詞典（「假面騎士」不再被切開）；DF 改用所有爬到的網頁計算，壓低「使用」「發出」這類泛用詞；剔除碎片、標點、日文助詞碎片與 `data/expansion-excludes.txt` 中的其他作品與泛用詞；權重 = 1 + 1.5 × 相關度；前 2 個新擴充詞加上「假面騎士OOO」再搜尋並重新排名，最多 2 輪（由 `engine/RealSearchEngine` 控制）。搜尋「貓咪」時擴充出「外科、貪吃、進化、天才、斬碎」與「暹罗、シャム、暹羅貓、压力、シャムネコ」（第 3、13 集的貓 Yummy）。限制：搜尋「核心硬幣」只擴充出泛用詞「聲稱」，下一步改用 Proposal 2.1 節的專屬程度篩選。執行：`cli/Stage4Main`，結果在 `data/results/stage4-results.csv`。
+
 ### 4.5 Stage 5（90%+）：上線
 
 | | |
@@ -366,10 +373,38 @@ public interface SearchProvider {
 
 **頁面功能：**
 
-- 使用者輸入關鍵字，例如「安卡 結局」
+- 使用者輸入任何關鍵字，例如「安卡 結局」、「貓咪」
+- 每個結果以卡片呈現「為什麼相關」：段落、標籤、圖片、跳到該章節的連結（見下方）
 - 顯示排名、分數、各關鍵字次數
 - 可展開的網站樹狀結構
 - 「系統自動擴充的關鍵字」區塊
+
+**為什麼相關：段落摘要、標籤與圖片（2026-11-05 已實作）**
+
+實際結果（搜尋「貓咪」）：[docs/proposal/search-cards-cat.png](docs/proposal/search-cards-cat.png)；執行 `./mvnw compile exec:java -Dexec.mainClass=com.group16.ooosearch.cli.SearchMain -Dexec.args="貓咪"`，段落存到 `data/results/passages.csv`。
+
+排名只說「哪個網頁最相關」，沒說「為什麼」。搜尋「貓咪」時第 1 名是 OOO 角色列表，使用者只看標題會不知道它和貓的關係。所以每個結果附上網頁中同時和查詢詞與 OOO 相關的段落，標出這段在講誰，並盡量附上圖片：
+
+```
+1. 中文維基：假面騎士OOO角色列表                    網站總分 6430
+   為什麼相關：[卡佳里] [貓系]
+   ┌ 主要角色 › 貪婪 › 卡佳里                       [卡佳里的圖片]
+   │ 「…貓系幹部。下半身不完全，代表色是黃色…」          來源：Kamen Rider Wiki
+   └ 前往這一段 →
+```
+
+| 步驟 | 做法 | 類別（`snippet/`，程式組負責） |
+|---|---|---|
+| 1. 切段落 | 以表格列、清單項目、段落為單位；用 **Stack** 記錄所在的章節標題路徑與錨點 | `PassageExtractor` |
+| 2. 段落計分 | 段落必須含查詢詞；分數 `P_q(t) = (0.1 + ln(1 + q(t))) × (1 + Σ w(k) × c(k, t))`；用 **PriorityQueue** 從整棵網站樹取前 3 段，相同內容只留一段，「熊貓」這類誤中用排除詞濾掉 | `PassageRanker` |
+| 3. 標籤 | 段落中出現的 OOO 關鍵字，加上章節標題；各組合（塔托巴、獅虎豹…）要加進 `data/concepts.txt` | `PassageRanker` |
+| 4. 圖片 | 依序：同段落／同章節的圖片（略過小於 100px 的圖示）→ 用關鍵字表的英文寫法查 Kamen Rider Wiki（Fandom）的代表圖（例如 Kazari）→ Fandom 檔案搜尋；都沒有就不顯示 | `ImageFinder` |
+
+- 段落資料放在 `model/Passage`（文字、章節路徑、錨點網址、分數、標籤、圖片網址與來源）。
+- 段落直接從網站樹各節點的網頁 HTML 切出，**不修改共用的 `PageResult`、`SiteResult`**；只在 `engine/SearchResponse` 加上每個網站的段落（修改前會先在群組告知）。
+- 圖片只用原網址顯示並標示來源，不下載、不重新上傳。
+- Stage 5 負責顯示：查詢詞與 OOO 關鍵字以螢光標示，旁邊列出標籤與圖片。
+- 完整說明見 Proposal 2.5 節。
 
 **部署（免費）：** Render 免費方案（閒置會休眠，第一次開啟較慢），或本機執行加 Cloudflare Tunnel。
 
@@ -385,7 +420,7 @@ public interface SearchProvider {
 
 **做法：**
 
-1. **包成 prompt（RAG 的概念）**：把系統排名前幾的網頁摘要與分數放進 prompt，例如「根據以下檢索結果，說明安卡和映司的關係與結局」，讓 LLM 根據我們的檢索結果回答。
+1. **包成 prompt（RAG 的概念）**：把段落摘要（見 4.5）挑出的相關段落連同來源網址放進 prompt，例如「根據以下檢索結果，說明安卡和映司的關係與結局」，讓 LLM 根據我們的檢索結果回答。
 2. **對照組**：直接問 ChatGPT、Gemini、DeepSeek 同一個問題，不提供我們的資料。
 3. **比較項目**：
    - 正確性：核心硬幣的種類與顏色、角色關係有沒有講錯
@@ -477,10 +512,12 @@ public interface SearchEngine {
 
 **修改共用介面前，請先在群組告知所有人。**
 
+> **2026-11-05：** `SearchEngine` 介面沒變，新增正式實作 `engine/RealSearchEngine`（`RealSearchEngine.createDefault()`）。`SearchResponse` 新增 `getPassages(根網址)`，回傳該網站「為什麼相關」的段落（`model/Passage`：摘要、章節路徑、章節連結、標籤、圖片）；舊建構子保留，`FakeSearchEngine` 第一個結果附一段示範段落。`PageResult`、`SiteResult` 沒有修改。
+
 ### 5.2 依賴方向
 
 ```
-web → engine → semantic → search → tree → scoring → fetch → model
+web → engine → semantic → snippet → search → tree → scoring → fetch → model
 ```
 
 - **下層不能 import 上層。** 例如 `scoring/` 不可以 import `tree/`。
@@ -568,7 +605,8 @@ dsa-final-project-group16/
     │   ├── search/      SearchProvider, FakeSearchProvider, DuckDuckGoProvider, MediaWikiProvider,
     │   │                CachedGoogleProvider, SearchAggregator, GoogleResultCollector
     │   ├── semantic/    KeywordExpander, FakeKeywordExpander, Tokenizer, TfIdfAnalyzer
-    │   ├── engine/      SearchEngine, SearchResponse, FakeSearchEngine（串起所有 Stage 的總入口）
+    │   ├── snippet/     PassageExtractor, PassageRanker, ImageFinder（段落摘要與圖片）
+    │   ├── engine/      SearchEngine, SearchResponse, FakeSearchEngine, RealSearchEngine（串起所有 Stage 的總入口）
     │   ├── web/         OooSearchApplication, controller/, service/
     │   ├── llm/         PromptBuilder
     │   └── cli/         Stage1Main, Stage2Main, Stage3Main, Stage4Main,
@@ -591,6 +629,7 @@ dsa-final-project-group16/
 | `tree/` | BFS 爬取子頁面、連結過濾、建樹、後序走訪計分、網站排名 |
 | `search/` | 各種搜尋來源與合併；`GoogleResultCollector` 是離線執行的 Selenium 程式 |
 | `semantic/` | 斷詞、TF-IDF、共現分析、關鍵字擴充 |
+| `snippet/` | 從網站樹的網頁切出段落（Stack 記錄章節路徑）、挑出和查詢詞與 OOO 都相關的前 3 段（PriorityQueue）、標籤與圖片 |
 | `engine/` | 把 Stage 1–4 串成一次完整的搜尋，Stage 5 只透過它呼叫 |
 | `web/` | Spring Boot 的進入點、controller、service |
 | `llm/` | 把檢索結果組成 prompt |
@@ -629,6 +668,7 @@ notes/homeworks/
 |---|---|---|
 | 編譯並執行所有測試 | `.\mvnw.cmd test` | `./mvnw test` |
 | 執行 Stage 1 Demo | `.\mvnw.cmd compile exec:java "-Dexec.mainClass=com.group16.ooosearch.cli.Stage1Main"` | `./mvnw compile exec:java -Dexec.mainClass=com.group16.ooosearch.cli.Stage1Main` |
+| 完整搜尋（排名、擴充、段落與圖片） | `.\mvnw.cmd compile exec:java "-Dexec.mainClass=com.group16.ooosearch.cli.SearchMain" "-Dexec.args=貓咪"` | `./mvnw compile exec:java -Dexec.mainClass=com.group16.ooosearch.cli.SearchMain -Dexec.args="貓咪"` |
 | 重新產生關鍵字表（修改 `concepts.txt` 後） | `.\mvnw.cmd compile exec:java "-Dexec.mainClass=com.group16.ooosearch.cli.KeywordSeedAnalyzer"` | `./mvnw compile exec:java -Dexec.mainClass=com.group16.ooosearch.cli.KeywordSeedAnalyzer` |
 | 啟動網站，開啟 http://localhost:8080 | `.\mvnw.cmd spring-boot:run` | `./mvnw spring-boot:run` |
 | 打包成 jar（輸出到 `target/`） | `.\mvnw.cmd package` | `./mvnw package` |
@@ -703,6 +743,7 @@ notes/homeworks/
 | 蔡妙青 | [semantic](src/main/java/com/group16/ooosearch/semantic/TODO.md) |
 | 劉又綺、鄭年芮 | [proposal](docs/proposal/TODO.md)、[search](src/main/java/com/group16/ooosearch/search/TODO.md)、[web](src/main/java/com/group16/ooosearch/web/TODO.md)、[resources](src/main/resources/TODO.md)、[llm](src/main/java/com/group16/ooosearch/llm/TODO.md)、[evaluation](evaluation/TODO.md) |
 | 所有人 | [cli](src/main/java/com/group16/ooosearch/cli/TODO.md)、[data](data/TODO.md)、[test](src/test/java/com/group16/ooosearch/TODO.md) |
+| 程式組（待指定） | [snippet](src/main/java/com/group16/ooosearch/snippet/TODO.md)（段落摘要與圖片） |
 | 尚未分配 | [presentation](docs/presentation/TODO.md) |
 
 根目錄的 `pom.xml` 與 Maven Wrapper（`mvnw`、`mvnw.cmd`）已在 Stage 0 建立。
@@ -715,13 +756,38 @@ notes/homeworks/
 - [x] `.gitignore`
 - [x] Stage 0：`pom.xml`、介面、假資料實作（2026-10-20）
 - [x] Stage 1：單一網頁排名（2026-10-20）
-- [ ] Proposal 主題介紹（10/22）
-- [ ] Stage 2：網站排名（樹狀結構）
-- [ ] Stage 3：自主搜尋網址並重新排名
-- [ ] Proposal 最終版（11/05）
-- [ ] Stage 4：語意分析與關鍵字擴充
+- [x] Proposal 主題介紹（10/22）
+- [x] Stage 2：網站排名（樹狀結構）（2026-10-24 初版；2026-10-31 修正計分，PR #1）
+- [x] Stage 3：自主搜尋網址並重新排名（2026-10-28 初版；2026-10-31 修正計分並加入 Google 對照組，PR #1）
+- [x] Proposal 最終版（11/05，[docs/proposal/](docs/proposal/)）
+- [x] Stage 4：語意分析與關鍵字擴充（2026-11-01 初版，PR #2；2026-11-05 修正）
+- [x] 正式版 `SearchEngine`：`RealSearchEngine`，把 Stage 1–4 與段落摘要串起來（2026-11-05）
+- [x] 段落摘要與圖片：結果頁說明「為什麼相關」（2026-11-05）
 - [ ] Stage 5：網站上線
 - [ ] Stage 6：與 LLM 比較
 - [ ] PPT 完稿（12/10）
 - [ ] 最終 Demo（12/17）
 - [ ] 指定 PPT 與上台報告的負責人
+
+### 目前狀態（2026-11-05）
+
+| Stage | 負責人 | 期限 | 狀態 | 報告 |
+|---|---|---|---|---|
+| 0、1 | 温亮達 | 10/22 | 已完成（10/20） | [stage0](notes/stage-reports/stage0-report.md)、[stage1](notes/stage-reports/stage1-report.md) |
+| 2 | 廖若羽 | 10/27 | 已完成（10/31 修正） | [stage2](notes/stage-reports/stage2-report.md) |
+| 3 | 劉又綺、鄭年芮 | 11/01 | 已完成（10/31 修正） | [stage3](notes/stage-reports/stage3-report.md) |
+| 4 | 蔡妙青 | 11/12 | 已完成（11/05 修正） | [stage4](notes/stage-reports/stage4-report.md) |
+| 正式版 SearchEngine、段落摘要與圖片 | 温亮達 | 11/16 | 已完成（11/05） | Proposal 2.4、2.5 節 |
+| 5 | 劉又綺、鄭年芮（程式組支援） | 11/19 | 未開始 | — |
+| 6 | 劉又綺、鄭年芮 | 11/26 | 未開始 | — |
+
+全部 81 個測試通過（`./mvnw test`）。
+
+**待處理：**
+
+- **Stage 4 擴充品質**：搜尋「核心硬幣」只擴充出泛用詞「聲稱」；改用專屬程度（Proposal 2.1）篩選擴充詞，取代人工排除表。
+- **Stage 5**：`web/` 的 controller、service 呼叫 `RealSearchEngine`（一次搜尋需數分鐘，Demo 查詢先用 `cli/SearchMain` 存進快取），前端顯示結果卡片（段落、標籤、圖片、章節連結）。
+- **Stage 3 遺留**：被擋網站應標示「無法評分」、連結選取、人工評分與 NDCG@10。
+- **段落摘要與圖片的限制**：標籤為「核心硬幣」的段落都拿到同一張代表圖；標籤必須有英文寫法才查得到 Fandom 圖。
+- **任意查詢**（11/05 已做查詢限定、查詢詞計分與排除詞）：同義詞表擴充；補記錄日常詞查詢（貓咪、冰棒、鳥）的 Google 對照組。
+- **計分改良**（Proposal 2.6 最後一段）：對數詞頻 × 涵蓋度、標題加權，尚未實作。

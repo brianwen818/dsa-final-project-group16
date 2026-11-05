@@ -1,6 +1,6 @@
 # 候選關鍵字清單（待審核）
 
-由 `cli/KeywordSeedAnalyzer` 於 2026-10-20 產生。完整清單見同資料夾的 `ja-candidates.csv`、`zh-candidates.csv`。
+由 `cli/KeywordSeedAnalyzer` 於 2026-11-05 產生。完整清單見同資料夾的 `ja-candidates.csv`、`zh-candidates.csv`。
 
 ## 資料來源
 

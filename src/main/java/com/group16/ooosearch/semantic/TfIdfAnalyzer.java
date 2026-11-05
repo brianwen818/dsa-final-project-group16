@@ -35,34 +35,54 @@ public class TfIdfAnalyzer {
     }
 
     /**
-     * 建構共現關係 Graph（鄰接表），並計算分數取出 Top-K 擴充詞
+     * 建構共現關係 Graph（鄰接表），並計算分數取出 Top-K 擴充詞（DF 以 pages 本身計算）。
      */
     public List<CandidateWord> extractTopK(List<WebPage> pages, Set<String> originalKeywords, int topK) {
+        return extractTopK(pages, originalKeywords, topK, List.of());
+    }
+
+    /**
+     * 同上，但 DF（文件頻率）改用 background 這批網頁計算（例如所有爬到的網頁）。
+     * pages 只是少數相關段落時，「使用」「發出」這類泛用詞在段落中的 DF 很低、壓不下來；
+     * 改用整批網頁當背景，泛用詞的 DF 高、IDF 低，只在少數網頁出現的專有名詞才會勝出。
+     */
+    public List<CandidateWord> extractTopK(List<WebPage> pages, Set<String> originalKeywords, int topK,
+                                           List<WebPage> background) {
         // 1. 建立鄰接表 Graph：Map<WordA, Map<WordB, 共現次數>>
         Map<String, Map<String, Integer>> adjacencyList = new HashMap<>();
         Map<String, Integer> documentFrequency = new HashMap<>();
-        int totalDocs = pages.size();
+        boolean useBackground = !background.isEmpty();
+        int totalDocs = useBackground ? background.size() : pages.size();
+        if (useBackground) {
+            for (WebPage page : background) {
+                for (String token : new HashSet<>(tokenizer.tokenize(textExtractor.extract(page.getHtml()), originalKeywords))) {
+                    documentFrequency.merge(token, 1, Integer::sum);
+                }
+            }
+        }
 
         for (WebPage page : pages) {
             if (page.getHtml() == null) continue;
             
             // 使用實例方法 extract() 萃取正文
             String cleanText = textExtractor.extract(page.getHtml());
-            List<String> tokens = tokenizer.tokenize(cleanText);
+            List<String> tokens = tokenizer.tokenize(cleanText, originalKeywords); // 單字的原關鍵字（例如查詢詞「貓」）也保留
 
             Set<String> uniqueTokensInDoc = new HashSet<>(tokens);
             boolean containsOriginal = uniqueTokensInDoc.stream().anyMatch(originalKeywords::contains);
 
-            // 計算 DF (Document Frequency)
-            for (String token : uniqueTokensInDoc) {
-                documentFrequency.put(token, documentFrequency.getOrDefault(token, 0) + 1);
+            // 計算 DF (Document Frequency)；有背景網頁時已在上面算好
+            if (!useBackground) {
+                for (String token : uniqueTokensInDoc) {
+                    documentFrequency.put(token, documentFrequency.getOrDefault(token, 0) + 1);
+                }
             }
 
             // 若網頁包含原關鍵字，建立詞與詞之間的共現鄰接表邊（Edge）
             if (containsOriginal) {
                 for (int i = 0; i < tokens.size(); i++) {
                     String wordA = tokens.get(i);
-                    if (wordA.length() <= 1) continue;
+                    if (wordA.length() <= 1 && !originalKeywords.contains(wordA)) continue;
 
                     adjacencyList.putIfAbsent(wordA, new HashMap<>());
                     Map<String, Integer> neighbors = adjacencyList.get(wordA);
@@ -71,7 +91,7 @@ public class TfIdfAnalyzer {
                     int windowEnd = Math.min(i + 5, tokens.size());
                     for (int j = i + 1; j < windowEnd; j++) {
                         String wordB = tokens.get(j);
-                        if (!wordB.equals(wordA) && wordB.length() > 1) {
+                        if (!wordB.equals(wordA) && (wordB.length() > 1 || originalKeywords.contains(wordB))) {
                             neighbors.put(wordB, neighbors.getOrDefault(wordB, 0) + 1);
                             
                             // 無向圖雙向記錄
@@ -93,7 +113,7 @@ public class TfIdfAnalyzer {
                     if (originalKeywords.contains(candidate)) continue;
 
                     int coFreq = edge.getValue();
-                    int df = documentFrequency.getOrDefault(candidate, 1);
+                    int df = Math.max(1, documentFrequency.getOrDefault(candidate, 1));
                     double tfIdfWeight = coFreq * Math.log((double) totalDocs / df + 1.0);
 
                     wordScores.put(candidate, wordScores.getOrDefault(candidate, 0.0) + tfIdfWeight);

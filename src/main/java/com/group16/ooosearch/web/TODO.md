@@ -10,7 +10,7 @@
 
 - [x] `OooSearchApplication.java`：Spring Boot 進入點（Stage 0 已建立最小版本）
 - [ ] `controller/SearchController.java`：處理搜尋請求
-- [ ] `service/SearchService.java`：呼叫 `SearchEngine`（開發前端時先用 `FakeSearchEngine`）
+- [ ] `service/SearchService.java`：呼叫 `SearchEngine`（開發前端時先用 `FakeSearchEngine`，上線時換成 `RealSearchEngine.createDefault()`；一次搜尋要數分鐘，Demo 查詢請先跑 `cli/SearchMain` 把網頁存進快取）
 
 ## 其他工作
 
